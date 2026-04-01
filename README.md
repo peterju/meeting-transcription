@@ -4,10 +4,11 @@
 
 ## 功能
 
-- 錄音設備偵測與選擇
-- 音訊錄製（MP3/M4A 格式）
-- 雜音消除與濾波處理
-- 語音轉文字（WhisperPS / WhisperDesktop）
+- **錄音設備偵測**：自動列出系統可用音訊輸入設備。
+- **高品質錄製**：支援 MP3/M4A 格式，內建高通/低通濾波與降噪處理。
+- **獨立播放選單**：內建音訊播放器，可自由選擇並回放錄音檔。
+- **自動化組件下載**：一鍵下載最新版 FFmpeg 與 Whisper 模型。
+- **外部設定檔**：透過 `settings.json` 輕鬆調整所有參數，無需修改程式碼。
 
 ## 前置條件
 
@@ -16,66 +17,50 @@
 
 ## 使用方式
 
-### 執行主選單
+### 1. 自訂設定 (選用)
+
+您可以開啟 [`settings.json`](settings.json) 修改錄音品質、轉錄提示詞或下載連結。該檔案採用 UTF-8 編碼，並包含中文說明欄位（`purpose`）引導您進行設定。
+
+### 2. 執行主選單
 
 ```cmd
 menu.cmd
 ```
 
-或直接執行各步驟腳本：
+透過主選單，您可以依序執行各個步驟：
 
-### Step 1: 下載必要檔案
+1. **下載必要組件** (初次使用時執行)
+2. **開始錄音**
+3. **播放音訊檔案**
+4. **語音轉文字**
 
-```powershell
-.\step1_download-dependencies.ps1
-```
+---
 
-會自動下載：
-- FFmpeg（音訊處理）
-- WhisperDesktop（語音轉文字）
-- ggml-medium.bin（語音辨識模型）
-- WhisperPS PowerShell 模組
-
-### Step 2: 錄音
-
-```powershell
-.\step2_record-audio.ps1
-```
-
-1. 執行腳本後，選擇錄音設備
-2. 開始錄音
-3. 按 `Q` 停止錄音
-4. 錄音檔案會以 `Record_MMdd_HHmm.mp3` 格式儲存
-
-可選擇輸出格式（mp3/m4a）及音訊濾波器（高通/低通/雜訊消除）
-
-### Step 3: 語音轉文字
-
-```powershell
-.\step3_transcribe-audio.ps1
-```
-
-自動偵測音訊檔案並轉換為文字（.txt）與字幕（.srt）
-
-## 專案結構
+### 專案結構
 
 ```
 .
-├── menu.cmd                          # 主選單
-├── step1_download-dependencies.ps1   # 下載必要工具
-├── step2_record-audio.ps1            # 錄音腳本
-├── step3_transcribe-audio.ps1        # 轉文字腳本
-├── README.md
-├── .gitignore
-├── .gitattributes
-├── FFmpeg/                           # FFmpeg（由 step1 產生）
-└── WhisperDesktop/                   # WhisperDesktop（由 step1 產生）
+├── menu.cmd                          # 主選單入口
+├── settings.json                     # 集中設定檔 (JSON 格式)
+├── step1_download-dependencies.ps1   # 自動化工具下載
+├── step2_record-audio.ps1            # 錄音處理
+├── step3_play-audio.ps1              # 音訊回放處理
+├── step4_transcribe-audio.ps1        # Whisper 轉錄處理
+├── README.md                         # 專案說明
+├── FFmpeg/                           # FFmpeg 工具目錄
+└── WhisperDesktop/                   # Whisper 工具與模型目錄
 ```
 
-## 相關資源
+## 故障排除
 
-- [WhisperDesktop](https://github.com/Const-me/Whisper)
-- [FFmpeg](https://ffmpeg.org/)
+若執行腳本時發生編碼相關的語法錯誤，請確保：
+
+1. 本專案的所有 `.ps1` 腳本均保持純英文註解。
+2. [`settings.json`](settings.json) 必須以 **UTF-8**（不含 BOM）格式儲存。
+
+若選單中文顯示亂碼，請確認是從 `menu.cmd` 啟動，而不是直接執行 `.ps1` 檔案。
+
+若找不到錄音檔案，請確認錄音檔存放在專案根目錄（與 `menu.cmd` 同層），而非子資料夾中。
 
 ## 授權
 

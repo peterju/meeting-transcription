@@ -1,55 +1,39 @@
 # step2_record-audio.ps1
-# Record audio from microphone to MP3 file
+# Record audio from microphone using FFmpeg
 
-# ============================================================
-# Audio Configuration (adjust these values as needed)
-# ============================================================
-$audioConfig = @{
-    # Output format: "mp3" or "m4a"
-    format = "mp3"
-    
-    # High-pass filter: removes frequencies below this value (rumble/hum)
-    # Set to 0 to disable
-    highpass = 100
-    
-    # Low-pass filter: removes frequencies above this value (hiss)
-    # Set to 0 to disable
-    lowpass = 5000
-    
-    # Noise reduction strength: -50 (strongest) to 0 (disabled)
-    # Recommended: -30 for light, -25 for moderate
-    noiseReduction = -25
-    
-    # MP3 quality: 0 (best) to 9 (smallest file)
-    # Recommended: 2-4 for voice recording
-    mp3Quality = 4
-    
-    # M4A (AAC) quality: 0 (best) to 500 (worst), 128-192 typical
-    m4aQuality = 128
+# Maintenance: This file uses English comments to avoid PowerShell 5.1 parser errors.
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+if ([string]::IsNullOrEmpty($scriptDir)) { $scriptDir = "." }
+
+# --- Load settings from JSON ---
+$settingsPath = Join-Path $scriptDir "settings.json"
+if (-not (Test-Path "$settingsPath")) {
+    Write-Host "Error: settings.json not found." -ForegroundColor Red
+    pause; exit 1
 }
-# ============================================================
+$jsonStr = [System.IO.File]::ReadAllText($settingsPath, [System.Text.Encoding]::UTF8)
+$settings = $jsonStr | ConvertFrom-Json
+$audioConfig = $settings.audio
 
+$ffmpegPath = Join-Path $scriptDir "FFmpeg\ffmpeg.exe"
+if (-not (Test-Path "$ffmpegPath")) {
+    Write-Host "Error: ffmpeg.exe not found at $ffmpegPath" -ForegroundColor Red
+    pause; exit 1
+}
+
+# FIX: menu.cmd sets 'chcp 950' (Big5) before launching this script.
+# We must override it with UTF-8 (65001) so that Chinese device names
+# and menu text are displayed correctly in the console.
 chcp 65001 | Out-Null
-[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
-# Build audio filter string based on configuration
-$audioFilters = @()
-if ($audioConfig.highpass -gt 0) {
-    $audioFilters += "highpass=f=$($audioConfig.highpass)"
-}
-if ($audioConfig.lowpass -gt 0) {
-    $audioFilters += "lowpass=f=$($audioConfig.lowpass)"
-}
-if ($audioConfig.noiseReduction -ne 0 -and $audioConfig.noiseReduction -lt 0) {
-    $audioFilters += "afftdn=nf=$($audioConfig.noiseReduction)"
-}
-$afString = ($audioFilters -join ",")
+# --- Robust Device Discovery ---
+Write-Host "Searching for audio devices..." -ForegroundColor Gray
 
-# List available audio devices
-$raw = .\FFmpeg\ffmpeg -list_devices true -f dshow -i dummy 2>&1
+$raw = & "$ffmpegPath" -list_devices true -f dshow -i dummy 2>&1
 
-# Parse device list
 $mics = @()
 foreach ($line in $raw) {
     if ($line -match '"([^"]+)"\s*\(audio\)') {
@@ -57,82 +41,79 @@ foreach ($line in $raw) {
     }
 }
 
-# Show menu
+if ($mics.Count -eq 0) {
+    Write-Host "Error: No audio devices found!" -ForegroundColor Red
+    pause; exit 1
+}
+
+# --- Menu Display ---
 Write-Host "=========================================="
 Write-Host "      Select Recording Device" -ForegroundColor Cyan
 Write-Host "=========================================="
-if ($mics.Count -eq 0) {
-    Write-Host "Error: No recording device found!" -ForegroundColor Red
-    pause
-    exit
-}
-
-$count = 1
-foreach ($m in $mics) {
-    Write-Host " [$count] : $m" -ForegroundColor Green
-    $count++
+for ($i=0; $i -lt $mics.Count; $i++) {
+    Write-Host " [$($i+1)] : $($mics[$i])" -ForegroundColor Green
 }
 Write-Host " [Q] : Quit" -ForegroundColor Yellow
 Write-Host "=========================================="
 
-$choice = Read-Host "Your choice"
-if ($choice -eq "q" -or $choice -eq "Q") {
-    exit
+$choice = Read-Host "Choice"
+if ($choice -eq "q" -or $choice -eq "Q") { exit 0 }
+
+# FIX: Always initialize $userVal before passing it as [ref] to TryParse.
+# Without this, PowerShell reuses the stale value from a previous run in the
+# same session, causing the wrong device to be selected.
+$userVal = 0
+if (-not [int]::TryParse($choice, [ref]$userVal) -or $userVal -lt 1 -or $userVal -gt $mics.Count) {
+    Write-Host "Invalid choice." -ForegroundColor Red
+    pause; exit 1
 }
 
-# Convert to integer and validate
-$val = [int]$choice
-if ($val -lt 1 -or $val -gt $mics.Count) {
-    Write-Host "Invalid selection, exiting." -ForegroundColor Red
-    pause
-    exit
-}
-
-# Get the selected device - array is 0-indexed, menu is 1-indexed
-$selectedIndex = $val - 1
-$selected = $mics[$selectedIndex]
-
-# Set output filename based on format
+$selectedDevice = $mics[$userVal - 1]
 $time = Get-Date -Format "MMdd_HHmm"
-$extension = $audioConfig.format
-$file = "Record_$time.$extension"
+$fileName = "Record_$time.$($audioConfig.format)"
+$filePath = Join-Path $scriptDir $fileName
 
-# Start recording
+# Build audio filters
+$audioFilters = @()
+if ($audioConfig.highpass -gt 0) { $audioFilters += "highpass=f=$($audioConfig.highpass)" }
+if ($audioConfig.lowpass -gt 0) { $audioFilters += "lowpass=f=$($audioConfig.lowpass)" }
+if ($audioConfig.noiseReduction -lt 0) { $audioFilters += "afftdn=nf=$($audioConfig.noiseReduction)" }
+$afString = ($audioFilters -join ",")
+
+# --- Start Recording ---
 Clear-Host
 Write-Host "------------------------------------------"
-Write-Host " Recording: $selected" -ForegroundColor Yellow
-Write-Host "Filename: $file"
+Write-Host " Selected Device: $selectedDevice" -ForegroundColor Yellow
+Write-Host " Output File:     $fileName"
 Write-Host " Press [Q] to stop recording" -ForegroundColor Red
 Write-Host "------------------------------------------"
 
-# Run FFmpeg with configured audio filters
-$ErrorActionPreference = "Continue"
-$ffmpegCmd = ".\FFmpeg\ffmpeg -f dshow -i audio=""$selected"""
-if ($afString) {
-    $ffmpegCmd += " -af ""$afString"""
-}
+$ffmpegArgs = @("-f", "dshow", "-i", "audio=$selectedDevice")
+if ($afString) { $ffmpegArgs += @("-af", $afString) }
 
-# Handle different output formats
 if ($audioConfig.format -eq "mp3") {
-    $ffmpegCmd += " -c:a libmp3lame -q:a $($audioConfig.mp3Quality) -y ""$file"" -loglevel quiet"
-} elseif ($audioConfig.format -eq "m4a") {
-    $ffmpegCmd += " -c:a aac -b:a $($audioConfig.m4aQuality)k -y ""$file"" -loglevel quiet"
+    $ffmpegArgs += @("-c:a", "libmp3lame", "-q:a", "$($audioConfig.mp3Quality)")
+} else {
+    $ffmpegArgs += @("-c:a", "aac", "-b:a", "$($audioConfig.m4aQuality)k")
 }
+$ffmpegArgs += @("-y", "$filePath", "-loglevel", "quiet")
 
-Invoke-Expression $ffmpegCmd
+# FIX: Use the call operator (&) with splatting (@ffmpegArgs) instead of
+# Start-Process -ArgumentList. Start-Process joins the array with spaces and
+# does not quote individual arguments, so device names containing spaces
+# (e.g. "麥克風 (Logi C310 HD WebCam)") would be split and fail.
+# Splatting passes each element as a separate argument, no quoting needed.
+& "$ffmpegPath" @ffmpegArgs
 
-# Check if recording was successful
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Recording failed with error code: $LASTEXITCODE" -ForegroundColor Red
-    pause
-    exit
+if (Test-Path "$filePath") {
+    $size = (Get-Item "$filePath").Length
+    if ($size -gt 1000) {
+        Write-Host "`nSuccess! Saved to: $fileName" -ForegroundColor Green
+        Write-Output "Recording saved: $fileName"
+    } else {
+        Write-Host "`nError: Captured file is empty. The device may be in use." -ForegroundColor Red
+    }
+} else {
+    Write-Host "`nError: FFmpeg process failed to create a file." -ForegroundColor Red
 }
-
-# Check file size to ensure audio was captured
-$fileSize = (Get-Item $file).Length
-if ($fileSize -lt 1000) {
-    Write-Host "Warning: Recording file is very small ($fileSize bytes). No audio may have been captured." -ForegroundColor Yellow
-}
-
-Write-Host "`nRecording saved: $file" -ForegroundColor Green
 pause
