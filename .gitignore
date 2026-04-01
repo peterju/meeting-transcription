@@ -1,0 +1,11 @@
+# 外部工具
+WhisperDesktop/
+FFmpeg/
+
+# 錄音輸出
+*.mp3
+*.wav
+
+# 系統檔案
+.DS_Store
+Thumbs.db
