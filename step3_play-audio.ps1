@@ -37,12 +37,14 @@ Write-Host "Found $($audioFiles.Count) file(s):" -ForegroundColor Cyan
 for ($i=0; $i -lt $audioFiles.Count; $i++) {
     Write-Host "  [$($i+1)] $($audioFiles[$i].Name)"
 }
+Write-Host "  [Enter] Quit" -ForegroundColor Yellow
 Write-Host ""
 
 Write-Host "Enter index to play:"
 $selection = Read-Host "Choice"
 
-if ($selection -match "^\d+$") {
+if ([string]::IsNullOrEmpty($selection)) { exit 0 }
+elseif ($selection -match "^\d+$") {
     $index = [int]$selection - 1
     if ($index -ge 0 -and $index -lt $audioFiles.Count) {
         $selectedFile = $audioFiles[$index]

@@ -16,11 +16,11 @@ echo   [1] 步驟 1：下載必要組件 (FFmpeg, Whisper)
 echo   [2] 步驟 2：開始錄音
 echo   [3] 步驟 3：播放錄音檔案 (ffplay)
 echo   [4] 步驟 4：語音轉文字 (Transcribe)
-echo   [5] 離開
+echo   [Enter] 離開
 echo.
 echo ========================================
 set "choice="
-set /p choice=請輸入選項 [1-5]:
+set /p choice=請輸入選項 [1-4] 或直接按 Enter 離開:
 
 if "!choice!"=="1" (
     call :run_step1
@@ -38,7 +38,7 @@ if "!choice!"=="4" (
     call :run_step4
     goto :menu
 )
-if "!choice!"=="5" (
+if "!choice!"=="" (
     goto :eof
 )
 

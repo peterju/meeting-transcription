@@ -2,11 +2,11 @@
     "audio": {
         "purpose": "此區塊設定『步驟 2：錄音』。您可以更改格式 (mp3/m4a) 或調整降噪強度 (noiseReduction)。",
         "format": "mp3",
-        "highpass": 100,
+        "highpass": 80,
         "lowpass": 5000,
         "noiseReduction": -25,
-        "mp3Quality": 4,
-        "m4aQuality": 128
+        "mp3Quality": 2,
+        "m4aQuality": 192
     },
     "transcription": {
         "purpose": "此區塊設定『步驟 4：轉錄』。Prompt 可幫助模型辨識專有名詞，建議使用繁體中文描述。",

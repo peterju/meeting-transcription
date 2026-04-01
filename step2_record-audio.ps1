@@ -53,11 +53,11 @@ Write-Host "=========================================="
 for ($i=0; $i -lt $mics.Count; $i++) {
     Write-Host " [$($i+1)] : $($mics[$i])" -ForegroundColor Green
 }
-Write-Host " [Q] : Quit" -ForegroundColor Yellow
+Write-Host " [Enter] : Quit" -ForegroundColor Yellow
 Write-Host "=========================================="
 
 $choice = Read-Host "Choice"
-if ($choice -eq "q" -or $choice -eq "Q") { exit 0 }
+if ([string]::IsNullOrEmpty($choice)) { exit 0 }
 
 # FIX: Always initialize $userVal before passing it as [ref] to TryParse.
 # Without this, PowerShell reuses the stale value from a previous run in the

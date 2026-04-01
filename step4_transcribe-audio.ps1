@@ -70,22 +70,19 @@ Write-Host "Found $($audioFiles.Count) file(s):" -ForegroundColor Cyan
 for ($i=0; $i -lt $audioFiles.Count; $i++) {
     Write-Host "  [$($i+1)] $($audioFiles[$i].Name)"
 }
+Write-Host "  [Enter] Quit" -ForegroundColor Yellow
 Write-Host ""
 
 # Select
-if ($audioFiles.Count -eq 1) {
-    $filesToProcess = $audioFiles
-    Write-Host "Auto-selecting: $($audioFiles[0].Name)" -ForegroundColor Cyan
-} else {
-    Write-Host "Enter number (or 'A' for all):"
-    $selection = Read-Host "Choice"
-    if ($selection -eq "A" -or $selection -eq "a") { $filesToProcess = $audioFiles }
-    elseif ($selection -match "^\d+$") {
-        $index = [int]$selection - 1
-        if ($index -ge 0 -and $index -lt $audioFiles.Count) { $filesToProcess = @($audioFiles[$index]) }
-        else { Write-Host "Invalid index."; Read-Host; exit 1 }
-    } else { Write-Host "Invalid input."; Read-Host; exit 1 }
-}
+Write-Host "Enter number (or 'A' for all):"
+$selection = Read-Host "Choice"
+if ([string]::IsNullOrEmpty($selection)) { exit 0 }
+elseif ($selection -eq "A" -or $selection -eq "a") { $filesToProcess = $audioFiles }
+elseif ($selection -match "^\d+$") {
+    $index = [int]$selection - 1
+    if ($index -ge 0 -and $index -lt $audioFiles.Count) { $filesToProcess = @($audioFiles[$index]) }
+    else { Write-Host "Invalid index."; Read-Host; exit 1 }
+} else { Write-Host "Invalid input."; Read-Host; exit 1 }
 
 # Process
 Write-Host ""
