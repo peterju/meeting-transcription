@@ -5,6 +5,15 @@ FFmpeg/
 # 錄音輸出
 *.mp3
 *.wav
+*.m4a
+*.wma
+*.ogg
+*.flac
+
+# 轉文字輸出
+*.txt
+*.srt
+*.vtt
 
 # 系統檔案
 .DS_Store
