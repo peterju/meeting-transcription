@@ -106,7 +106,7 @@ if ($useArnndn -and -not $hasArnndnModel) {
 $audioFilters = @()
 
 if ($useArnndn -and $hasArnndnModel) {
-    $audioFilters += "arnndn=m=$arnndnPath"
+    $audioFilters += "arnndn=m=.\FFmpeg\$modelFile"
 }
 
 if ($gateValue -ne 0) {
