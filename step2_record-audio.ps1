@@ -81,7 +81,7 @@ Write-Host " Output File:     $fileName"
 Write-Host " Press [Q] to stop recording" -ForegroundColor Red
 Write-Host "------------------------------------------"
 
-$ffmpegArgs = @("-f", "dshow", "-i", "audio=$selectedDevice")
+$ffmpegArgs = @("-hide_banner", "-loglevel", "warning", "-f", "dshow", "-i", "audio=$selectedDevice")
 
 if ($audioConfig.format -eq "mp3") {
     $ffmpegArgs += @("-c:a", "libmp3lame", "-q:a", "$($audioConfig.mp3Quality)")
