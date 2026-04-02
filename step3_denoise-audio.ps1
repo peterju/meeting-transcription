@@ -106,9 +106,8 @@ if ($useArnndn -and -not $hasArnndnModel) {
 $audioFilters = @()
 
 if ($useArnndn -and $hasArnndnModel) {
-    $arnndnRelPath = Join-Path "FFmpeg" $modelFile
-    $arnndnFilter = "arnndn=m=" + $arnndnRelPath.Replace("\", "\\")
-    $audioFilters += $arnndnFilter
+    $arnndnRelPath = ".\FFmpeg\$modelFile" -replace '\\', '/'
+    $audioFilters += "arnndn=m=$arnndnRelPath"
 }
 
 if ($gateValue -ne 0) {
