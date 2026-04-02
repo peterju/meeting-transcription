@@ -43,7 +43,11 @@ $modulesDir = Join-Path $env:USERPROFILE "Documents\WindowsPowerShell\Modules"
 $whisperPSDir = Join-Path $modulesDir "WhisperPS"
 $needsWhisperPS = Test-DownloadNeeded $whisperPSDir "WhisperPS Module"
 
-if (-not ($needsFFmpeg -or $needsWhisperDesktop -or $needsModel -or $needsWhisperPS)) {
+$arnndnModelName = "bd.rnnn"
+$arnndnPath = Join-Path $ffmpegDir $arnndnModelName
+$needsArnndn = Test-DownloadNeeded $arnndnPath "ARNNDN Model ($arnndnModelName)"
+
+if (-not ($needsFFmpeg -or $needsWhisperDesktop -or $needsModel -or $needsWhisperPS -or $needsArnndn)) {
     Write-Host "All files ready. Done." -ForegroundColor Green
     Write-Host ""; Read-Host "Press Enter to exit"; exit 0
 }
@@ -134,6 +138,15 @@ if ($needsWhisperPS) {
     if (Test-Path "$whisperPSDir") { Remove-Item "$whisperPSDir" -Recurse -Force }
     Copy-Item "$whisperPSTemp\WhisperPS" "$modulesDir" -Recurse -Force
     Write-Host "WhisperPS module installed" -ForegroundColor Green
+}
+
+# [5/5] ARNNDN model
+if ($needsArnndn) {
+    Write-Host "[5/5] Downloading ARNNDN model ($arnndnModelName)..."
+    $arnndnUrl = $settings.urls.arnndnModel
+    curl.exe -L -o "$arnndnPath" "$arnndnUrl"
+    if ($LASTEXITCODE -ne 0) { Write-Host "Download failed"; Read-Host; exit 1 }
+    Write-Host "ARNNDN model installed" -ForegroundColor Green
 }
 
 Write-Host "Cleaning up..."

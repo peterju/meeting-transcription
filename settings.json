@@ -1,24 +1,51 @@
 {
-    "audio": {
-        "purpose": "此區塊設定『步驟 2：錄音』。您可以更改格式 (mp3/m4a) 或調整降噪強度 (noiseReduction)。",
-        "format": "mp3",
-        "highpass": 80,
-        "lowpass": 5000,
-        "noiseReduction": -25,
-        "mp3Quality": 2,
-        "m4aQuality": 192
-    },
-    "transcription": {
-        "purpose": "此區塊設定『步驟 4：轉錄』。Prompt 可幫助模型辨識專有名詞，建議使用繁體中文描述。",
-        "prompt": "這是一個會議錄音，請使用繁體中文進行逐字稿轉錄。",
-        "language": "Chinese"
-    },
     "urls": {
-        "purpose": "此區塊定義『步驟 1：下載』的組件連結。FFmpeg 基礎連結已設定為 GitHub Releases 以提升下載速度。",
+        "purpose": "此區塊定義『步驟 1：下載』的相關設定。",
         "ffmpegReleaseBase": "https://github.com/GyanD/codexffmpeg/releases/download/",
         "whisperDesktop": "https://github.com/Const-me/Whisper/releases/download/1.12.0/WhisperDesktop.zip",
         "whisperPS": "https://github.com/Const-me/Whisper/releases/download/1.12.0/WhisperPS.zip",
         "whisperModel": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
-        "ffmpegFallback": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+        "ffmpegFallback": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+        "arnndnModel": "https://raw.githubusercontent.com/richardpl/arnndn-models/master/bd.rnnn"
+    },
+    "audio": {
+        "purpose": "此區塊設定『步驟 2：錄音』。您可以更改格式 (mp3/m4a)或其品質",
+        "format": "m4a",
+        "mp3Quality": 2,
+        "m4aQuality": 192
+    },
+    "record": {
+        "purpose": "此區塊定義『步驟 3：後製降噪』的相關設定。",
+        "activeProfile": "meeting",
+        "gate": -40,
+        "lowpass": 5000,
+        "hipass": 80,
+        "profiles": {
+            "meeting": {
+                "name": "會議模式",
+                "purpose": "啟用 ARNNDN 降噪，適合一般會議錄音",
+                "arnndn": {
+                    "enabled": true,
+                    "model": "bd.rnnn"
+                },
+                "lowpass": 0
+            },
+            "choir": {
+                "name": "合唱團模式",
+                "purpose": "停用 ARNNDN，使用 Gate + Lowpass + Hipass",
+                "arnndn": {
+                    "enabled": false,
+                    "model": "bd.rnnn"
+                },
+                "gate": -50,
+                "lowpass": 10000,
+                "hipass": 70
+            }
+        }
+    },
+    "transcription": {
+        "purpose": "此區塊定義『步驟 4：轉錄』相關設定。",
+        "prompt": "這是一個會議錄音，請使用繁體中文進行逐字稿轉錄。",
+        "language": "Chinese"
     }
 }

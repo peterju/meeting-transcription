@@ -73,13 +73,6 @@ $time = Get-Date -Format "MMdd_HHmm"
 $fileName = "Record_$time.$($audioConfig.format)"
 $filePath = Join-Path $scriptDir $fileName
 
-# Build audio filters
-$audioFilters = @()
-if ($audioConfig.highpass -gt 0) { $audioFilters += "highpass=f=$($audioConfig.highpass)" }
-if ($audioConfig.lowpass -gt 0) { $audioFilters += "lowpass=f=$($audioConfig.lowpass)" }
-if ($audioConfig.noiseReduction -lt 0) { $audioFilters += "afftdn=nf=$($audioConfig.noiseReduction)" }
-$afString = ($audioFilters -join ",")
-
 # --- Start Recording ---
 Clear-Host
 Write-Host "------------------------------------------"
@@ -89,14 +82,13 @@ Write-Host " Press [Q] to stop recording" -ForegroundColor Red
 Write-Host "------------------------------------------"
 
 $ffmpegArgs = @("-f", "dshow", "-i", "audio=$selectedDevice")
-if ($afString) { $ffmpegArgs += @("-af", $afString) }
 
 if ($audioConfig.format -eq "mp3") {
     $ffmpegArgs += @("-c:a", "libmp3lame", "-q:a", "$($audioConfig.mp3Quality)")
 } else {
     $ffmpegArgs += @("-c:a", "aac", "-b:a", "$($audioConfig.m4aQuality)k")
 }
-$ffmpegArgs += @("-y", "$filePath", "-loglevel", "quiet")
+$ffmpegArgs += @("-y", "$filePath")
 
 # FIX: Use the call operator (&) with splatting (@ffmpegArgs) instead of
 # Start-Process -ArgumentList. Start-Process joins the array with spaces and
@@ -104,6 +96,8 @@ $ffmpegArgs += @("-y", "$filePath", "-loglevel", "quiet")
 # (e.g. "麥克風 (Logi C310 HD WebCam)") would be split and fail.
 # Splatting passes each element as a separate argument, no quoting needed.
 & "$ffmpegPath" @ffmpegArgs
+
+Start-Sleep -Milliseconds 500
 
 if (Test-Path "$filePath") {
     $size = (Get-Item "$filePath").Length
