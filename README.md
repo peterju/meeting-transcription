@@ -29,8 +29,14 @@
 
 ### 2. 執行主選單
 
+**CLI 版本（命令列）：**
 ```cmd
-menu.cmd
+menuCli.cmd
+```
+
+**GUI 版本（圖形介面）：**
+```cmd
+menuGui.hta
 ```
 
 選單選項：
@@ -67,16 +73,17 @@ menu.cmd
 
 ```
 .
-├── menu.cmd                          # 主選單入口
-├── settings.json                     # 集中設定檔 (JSON 格式)
-├── step1_download-dependencies.ps1   # 自動化工具下載
-├── step2_record-audio.ps1            # 錄音處理
-├── step3_denoise-audio.ps1           # 後製降噪處理
-├── step4_play-audio.ps1              # 音訊播放處理
-├── step5_transcribe-audio.ps1        # Whisper 轉錄處理
-├── README.md                         # 專案說明
-├── FFmpeg/                           # FFmpeg 工具目錄 (含 bd.rnnn 模型)
-└── WhisperDesktop/                   # Whisper 工具與模型目錄
+├── menuCli.cmd                         # 主選單入口 (CLI)
+├── menuGui.hta                         # 主選單入口 (GUI)
+├── settings.json                       # 集中設定檔 (JSON 格式)
+├── step1_download-dependencies.ps1    # 自動化工具下載
+├── step2_record-audio.ps1             # 錄音處理
+├── step3_denoise-audio.ps1             # 後製降噪處理
+├── step4_play-audio.ps1                # 音訊播放處理
+├── step5_transcribe-audio.ps1          # Whisper 轉錄處理
+├── README.md                           # 專案說明
+├── FFmpeg/                             # FFmpeg 工具目錄 (含 bd.rnnn 模型)
+└── WhisperDesktop/                     # Whisper 工具與模型目錄
 ```
 
 ## 故障排除
@@ -86,7 +93,7 @@ menu.cmd
 1. 本專案的所有 `.ps1` 腳本均保持純英文註解。
 2. [`settings.json`](settings.json) 必須以 **UTF-8** 格式儲存。
 
-若選單中文顯示亂碼，請確認是從 `menu.cmd` 啟動，而不是直接執行 `.ps1` 檔案。
+若選單中文顯示亂碼，請確認是從 `menuCli.cmd` 啟動，而不是直接執行 `.ps1` 檔案。
 
 ## 授權
 
