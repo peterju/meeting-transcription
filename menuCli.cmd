@@ -17,11 +17,13 @@ echo   [2] 步驟 2：錄音
 echo   [3] 步驟 3：後製降噪
 echo   [4] 步驟 4：播放錄音
 echo   [5] 步驟 5：語音轉文字
-echo   [Enter] 離開
+echo   [6] 步驟 6：檔案管理
+echo   [7] 步驟 7：音量調整
+echo   [Enter] 退出
 echo.
 echo ========================================
 set "choice="
-set /p choice=請輸入選項 [1-5] 或按 Enter 離開：
+set /p choice=請輸入選項 [1-7] 或按 Enter 退出：
 
 if "!choice!"=="1" (
     call :run_step1
@@ -43,6 +45,14 @@ if "!choice!"=="5" (
     call :run_step5
     goto :menu
 )
+if "!choice!"=="6" (
+    call :run_step6
+    goto :menu
+)
+if "!choice!"=="7" (
+    call :run_step7
+    goto :menu
+)
 if "!choice!"=="" (
     goto :eof
 )
@@ -59,7 +69,7 @@ echo 正在執行步驟 1：下載依賴工具...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step1_download-dependencies.ps1"
 if %ERRORLEVEL% neq 0 (
     echo.
-    echo 發生錯誤，請稍後重試。
+    echo 發生錯誤，請檢查網路。
     pause
 )
 goto :eof
@@ -86,4 +96,16 @@ goto :eof
 echo.
 echo 正在執行步驟 5：語音轉文字...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step5_transcribe-audio.ps1"
+goto :eof
+
+:run_step6
+echo.
+echo 正在執行步驟 6：檔案管理...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step6_manage-files.ps1"
+goto :eof
+
+:run_step7
+echo.
+echo 正在執行步驟 7：音量調整...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step7_volume-adjust.ps1"
 goto :eof

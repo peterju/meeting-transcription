@@ -12,7 +12,8 @@
         "purpose": "此區塊設定『步驟 2：錄音』。您可以更改格式 (mp3/m4a)或其品質",
         "format": "m4a",
         "mp3Quality": 2,
-        "m4aQuality": 192
+        "m4aQuality": 192,
+        "defaultDevice": ""
     },
     "record": {
         "purpose": "此區塊定義『步驟 3：後製降噪』的相關設定。",

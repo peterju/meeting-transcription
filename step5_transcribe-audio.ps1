@@ -93,23 +93,53 @@ elseif ($selection -match "^\d+$") {
 
 # Process
 Write-Host ""
+$totalFiles = $filesToProcess.Count
+$currentFile = 0
+
 foreach ($file in $filesToProcess) {
+    $currentFile++
     Write-Host "========================================"
-    Write-Host "Processing: $($file.Name)" -ForegroundColor Yellow
-    Write-Host "Language: $($transConfig.language)" -ForegroundColor Gray
+    Write-Host "  File [$currentFile / $totalFiles]: $($file.Name)" -ForegroundColor Yellow
+    Write-Host "  Language: $($transConfig.language)" -ForegroundColor Gray
+    Write-Host "========================================"
+    Write-Host ""
+
+    # Show estimated duration
+    $ffmpegPath = Join-Path $scriptDir "FFmpeg\ffmpeg.exe"
+    if (Test-Path $ffmpegPath) {
+        $probeResult = & "$ffmpegPath" -i "$($file.FullName)" 2>&1
+        $durMatch = $probeResult | Where-Object { $_ -match "Duration:\s*(\d{2}):(\d{2}):(\d{2})" }
+        if ($durMatch) {
+            $hh = [int]$Matches[1]; $mm = [int]$Matches[2]; $ss = [int]$Matches[3]
+            $totalSecs = $hh * 3600 + $mm * 60 + $ss
+            $estMins = [math]::Ceiling($totalSecs / 60)
+            Write-Host "  Audio duration: $([string]::Format('{0:D2}:{1:D2}:{2:D2}', $hh, $mm, $ss))" -ForegroundColor Gray
+            Write-Host "  Est. transcription time: ~${estMins} min (CPU, medium model)" -ForegroundColor Gray
+            Write-Host ""
+        }
+    }
+
+    Write-Host "  Transcribing... (this may take a while)" -ForegroundColor Cyan
+    $startTime = Get-Date
 
     try {
         $result = Transcribe-File -model $model -path "$($file.FullName)" -language $transConfig.language -prompt $transConfig.prompt
 
+        $elapsed = (Get-Date) - $startTime
+        $elapsedStr = "{0:N0} min {1:N0} sec" -f $elapsed.TotalMinutes, $elapsed.Seconds
+
+        Write-Host ""
+        Write-Host "  Completed in $elapsedStr" -ForegroundColor Green
+
         $txtPath = [System.IO.Path]::ChangeExtension($file.FullName, ".txt")
         $result | Export-Text -Path "$txtPath"
-        Write-Host "Saved TXT: $(Split-Path $txtPath -Leaf)" -ForegroundColor Green
+        Write-Host "  Saved TXT: $(Split-Path $txtPath -Leaf)" -ForegroundColor Green
 
         $srtPath = [System.IO.Path]::ChangeExtension($file.FullName, ".srt")
         $result | Export-SubRip -Path "$srtPath"
-        Write-Host "Saved SRT: $(Split-Path $srtPath -Leaf)" -ForegroundColor Green
+        Write-Host "  Saved SRT: $(Split-Path $srtPath -Leaf)" -ForegroundColor Green
     } catch {
-        Write-Host "Error transcribing $($file.Name): $_" -ForegroundColor Red
+        Write-Host "  Error transcribing $($file.Name): $_" -ForegroundColor Red
     }
     Write-Host ""
 }

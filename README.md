@@ -1,73 +1,162 @@
 # 會議錄音轉逐字稿
 
-會議錄音轉逐字稿工具集，支援錄音、後製降噪與 Whisper 語音轉文字功能。
+> 只要帶著筆電（可選配無線 Mic），就能離線完成錄音、降噪、轉逐字稿，**取代手機錄音 + 付費轉錄服務**。
 
-## 功能
+## 開發初衷
 
-- **錄音設備偵測**：自動列出系統可用音訊輸入設備。
-- **高品質錄製**：支援 MP3/M4A 格式，預設 M4A 192kbps。
-- **後製降噪**：提供 Profile 模式的降噪處理（ARNNDN / Gate / Lowpass / Hipass）。
-- **獨立播放**：內建 ffplay 播放器，可自由選擇並回放錄音檔。
-- **語音轉文字**：支援 WhisperPS 離線轉錄。
-- **自動化下載**：一鍵下載 FFmpeg、Whisper 模型與 ARNNDN 模型。
-- **外部設定檔**：透過 `settings.json` 輕鬆調整所有參數。
+市面上轉錄服務（如 Notta、Trint）需上傳音檔到雲端，不僅**花錢**（按分鐘計費或訂閱制），還有**隱私疑慮**。本工具完全離線執行，所有資料留在你的電腦上：
 
-## 前置條件
+- **零成本**：一次性下載依賴後，無限次免費使用
+- **完全離線**：音檔不上傳，隱私有保障
+- **可控品質**：可自訂降噪參數與轉錄提示詞，適應不同場景
 
-- Windows 10/11
-- 已執行 `step1_download-dependencies.ps1` 下載必要工具
+## 硬體需求
 
-## 使用方式
+### 最低需求
 
-### 1. 自訂設定 (選用)
+| 項目 | 規格 |
+|------|------|
+| 作業系統 | Windows 10/11 (64-bit) |
+| CPU | Intel i5 / AMD Ryzen 5 以上 |
+| RAM | 8 GB 以上 |
+| 硬碟空間 | 2 GB（含 FFmpeg + Whisper 模型） |
+| 音訊輸入 | 內建麥克風 或 外接 USB 麥克風 |
 
-您可以開啟 [`settings.json`](settings.json) 修改：
+### 建議配備
 
-- **錄音格式**：audio.format、audio.m4aQuality
-- **後製降噪Profile**：record.activeProfile、profiles.meeting、profiles.choir
-- **轉錄提示詞**：transcription.prompt
+| 項目 | 規格 | 說明 |
+|------|------|------|
+| CPU | Intel i7 / AMD Ryzen 7 以上 | Whisper 轉錄速度更快 |
+| GPU | NVIDIA RTX 系列（可選） | WhisperDesktop 支援 GPU 加速 |
+| RAM | 16 GB 以上 | 長時錄音更穩定 |
 
-### 2. 執行主選單
+### 無線 Mic 選購建議
 
-**CLI 版本（命令列）：**
-```cmd
-menuCli.cmd
+如果你需要移動錄音或多人訪談，建議搭配無線麥克風：
+
+| 類型 | 推薦方向 | 預算範圍 |
+|------|----------|----------|
+| USB 無線接收器型 | 搜尋「USB Wireless Microphone System」，確認 Windows 免驅 | NT$ 1,000~5,000 |
+| 3.5mm 接頭型 | 確認筆電有 3.5mm Mic-in（非耳機/麥克風共用孔） | NT$ 500~2,000 |
+| 藍牙型 | 確認 Windows 藍牙配對後能識別為「錄音裝置」 | NT$ 800~2,500 |
+
+> **注意**：購買前請確認商品頁面標明「Windows 相容」或「免驅動」。部分手機專用無線 Mic 可能不支援 Windows。
+
+## 使用時機
+
+| 場景 | 建議 Profile | 說明 |
+|------|-------------|------|
+| 一般會議 | meeting | 啟用 ARNNDN 降噪，過濾空調/鍵盤聲 |
+| 一對一訪談 | meeting | 清晰人聲，適合後續逐字稿整理 |
+| 課程錄影收音 | meeting | 配合 OBS 等錄影軟體使用 |
+| 合唱團/音樂排練 | choir | 保留較寬頻段，不過度壓縮音質 |
+| 大型講堂 | meeting + 外接 Mic | 建議搭配指向性麥克風 |
+
+## 快速開始
+
+### 1. 啟動選單
+
+從專案資料夾中：
+1. CLI 版：雙擊 `menuCli.cmd`
+2. GUI 版：雙擊 `menuGui.hta`（若系統詢問關聯程式，請選擇 Microsoft HTML 主應用程式 mshta.exe）
+
+### 2. 確認設備
+
+將無線 Mic 或外接麥克風連接到筆電，確認 Windows 能正確識別：
+
+1. 右鍵點擊工作列喇叭圖示 → **音效設定**
+2. 在「輸入」裝置中，確認你的麥克風已出現
+3. 對著麥克風說話，觀察音量條是否有反應
+
+### 3. 下載依賴（首次執行）
+
+選擇 **[1] 下載工具**，等待 FFmpeg、Whisper 模型等下載完成。
+
+### 4. 測試麥克風
+
+選擇 **[2] 錄音**，腳本會列出所有可用音訊裝置。選擇你的麥克風後，**建議先進行電平測試**，確認有收到聲音再開始正式錄音。
+
+### 5. 完整流程
+
+```
+[1] 下載工具（首次）
+    ↓
+[2] 錄音（原始音檔）
+    ↓
+[3] 後製降噪（輸出 _denoised 檔）
+    ↓
+[4] 播放確認（比較原始 vs 降噪）
+    ↓
+[5] 語音轉文字（輸出 .txt + .srt）
+
+    [6] 檔案管理（列出/刪除/重新命名）
+    [7] 音量調整（分析音量、增減增益）
 ```
 
-**GUI 版本（圖形介面）：**
-```cmd
-menuGui.hta
-```
+步驟 6、7 為獨立工具，可在任何階段使用。
 
-選單選項：
-1. 步驟 1：下載依賴工具（首次執行）
-2. 步驟 2：錄音
-3. 步驟 3：後製降噪
-4. 步驟 4：播放錄音
-5. 步驟 5：語音轉文字
+## 設定檔說明
 
-### 3. 工作流程
+開啟 [`settings.json`](settings.json) 可調整：
 
-```
-[1] step1: 下載 FFmpeg + Whisper + bd.rnnn 模型
-    ↓
-[2] step2: 錄音（原始檔，無濾波）
-    ↓
-[3] step3: 後製降噪（根據 Profile 套用濾波器）
-    ↓
-[4] step4: 播放錄音（可用 ffplay 比較原始與降噪音軌）
-    ↓
-[5] step5: Whisper 轉文字（輸出 .txt 與 .srt）
-```
+| 參數 | 說明 | 預設值 |
+|------|------|--------|
+| `audio.format` | 錄音格式（mp3 / m4a） | m4a |
+| `audio.m4aQuality` | M4A 位元率 (kbps) | 192 |
+| `audio.mp3Quality` | MP3 品質 (0-9, 越小越好) | 2 |
+| `audio.defaultDevice` | 上次使用的錄音裝置（自動記錄） | 空（首次需手動選擇） |
+| `record.activeProfile` | 啟用哪組降噪設定 | meeting |
+| `transcription.language` | 轉錄語言 | Chinese |
+| `transcription.prompt` | 給 Whisper 的提示詞 | 會議錄音提示詞 |
 
-### 4. Profile 說明
+## 降噪 Profile 說明
 
 | Profile | ARNNDN | Gate | Lowpass | Hipass | 適用場景 |
 |---------|--------|------|---------|--------|----------|
 | meeting | 啟用 | -40dB | 0 | 0 | 一般會議錄音 |
 | choir | 停用 | -50dB | 10000Hz | 70Hz | 合唱團錄音 |
 
----
+| 參數 | 說明 |
+|------|------|
+| ARNNDN | AI 降噪濾波器，使用預訓練模型分離人聲與噪音 |
+| Gate | 音閘，低於此閾值的聲音會被靜音（dB） |
+| Lowpass | 低通濾波，只保留低於此頻率的聲音（Hz） |
+| Hipass | 高通濾波，只保留高於此頻率的聲音（Hz） |
+
+## 成本比較
+
+| 方案 | 費用 | 隱私 | 離線 |
+|------|------|------|------|
+| 本工具 | 免費（僅需電費） | 完全離線 | 是 |
+| Notta 付費版 | ~NT$ 300/月 | 需上傳 | 否 |
+| Trint 付費版 | ~NT$ 1,200/月 | 需上傳 | 否 |
+| Google 語音 API | ~NT$ 0.72/分鐘 | 需上傳 | 否 |
+
+> 以每月 10 小時錄音計算，使用付費服務約需 NT$ 4,320/月（Google API），本工具**完全免費**。
+
+## 故障排除
+
+### 找不到麥克風裝置
+1. 確認麥克風已正確連接
+2. 到 Windows 音效設定確認輸入裝置
+3. 部分藍牙 Mic 需在配對後手動設為「預設輸入裝置」
+
+### 轉錄速度慢
+- Whisper medium 模型在 CPU 上約為 **即時 0.5~1x**（10 分鐘音檔約需 10~20 分鐘）
+- 使用 WhisperDesktop（GPU 版）可大幅加速
+
+### 中文顯示亂碼
+- 請從 `menuCli.cmd` 或 `menuGui.hta` 啟動，**不要直接執行 .ps1 檔案**
+- `settings.json` 必須以 **UTF-8** 格式儲存
+
+### 降噪後聲音變悶
+- 檢查 `settings.json` 中 `lowpass` 值是否太低
+- 會議模式預設不啟用 lowpass，若聲音仍悶可嘗試停用 ARNNDN
+
+### 編碼相關錯誤
+1. 本專案的 `.cmd` 腳本可使用中文、Big5 編碼與 CRLF 換行。
+2. 本專案的 `.ps1` 腳本均保持純英文註解、UTF-8 編碼與 CRLF 換行。
+3. [`settings.json`](settings.json) 必須以 **UTF-8** 格式儲存。
 
 ## 專案結構
 
@@ -77,23 +166,16 @@ menuGui.hta
 ├── menuGui.hta                         # 主選單入口 (GUI)
 ├── settings.json                       # 集中設定檔 (JSON 格式)
 ├── step1_download-dependencies.ps1    # 自動化工具下載
-├── step2_record-audio.ps1             # 錄音處理
+├── step2_record-audio.ps1             # 錄音處理（含電平測試）
 ├── step3_denoise-audio.ps1             # 後製降噪處理
 ├── step4_play-audio.ps1                # 音訊播放處理
 ├── step5_transcribe-audio.ps1          # Whisper 轉錄處理
+├── step6_manage-files.ps1             # 音訊檔案管理（列出/刪除/重新命名）
+├── step7_volume-adjust.ps1            # 音量分析與增益調整
 ├── README.md                           # 專案說明
 ├── FFmpeg/                             # FFmpeg 工具目錄 (含 bd.rnnn 模型)
 └── WhisperDesktop/                     # Whisper 工具與模型目錄
 ```
-
-## 故障排除
-
-若執行腳本時發生編碼相關的語法錯誤，請確保：
-
-1. 本專案的所有 `.ps1` 腳本均保持純英文註解。
-2. [`settings.json`](settings.json) 必須以 **UTF-8** 格式儲存。
-
-若選單中文顯示亂碼，請確認是從 `menuCli.cmd` 啟動，而不是直接執行 `.ps1` 檔案。
 
 ## 授權
 

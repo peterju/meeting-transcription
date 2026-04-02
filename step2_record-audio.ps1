@@ -47,16 +47,67 @@ if ($mics.Count -eq 0) {
 }
 
 # --- Menu Display ---
+$defaultDevice = if ($audioConfig.PSObject.Properties.Name -contains "defaultDevice") { $audioConfig.defaultDevice } else { "" }
+$defaultIndex = -1
+if (-not [string]::IsNullOrEmpty($defaultDevice)) {
+    for ($i = 0; $i -lt $mics.Count; $i++) {
+        if ($mics[$i] -eq $defaultDevice) {
+            $defaultIndex = $i + 1
+            break
+        }
+    }
+}
+
 Write-Host "=========================================="
 Write-Host "      Select Recording Device" -ForegroundColor Cyan
 Write-Host "=========================================="
-for ($i=0; $i -lt $mics.Count; $i++) {
-    Write-Host " [$($i+1)] : $($mics[$i])" -ForegroundColor Green
+for ($i = 0; $i -lt $mics.Count; $i++) {
+    $marker = ""
+    if ($i + 1 -eq $defaultIndex) {
+        $marker = " [DEFAULT]"
+        Write-Host " [$($i+1)] : $($mics[$i])$marker" -ForegroundColor Yellow
+    } else {
+        Write-Host " [$($i+1)] : $($mics[$i])" -ForegroundColor Green
+    }
 }
 Write-Host " [Enter] : Quit" -ForegroundColor Yellow
 Write-Host "=========================================="
 
-$choice = Read-Host "Choice"
+if ($defaultIndex -gt 0) {
+    Write-Host ""
+    Write-Host "Using default device: $defaultDevice" -ForegroundColor Gray
+    Write-Host "Press Enter in 3 seconds to skip, or type a number to change." -ForegroundColor Gray
+    Write-Host ""
+
+    $skip = $false
+    for ($countdown = 3; $countdown -gt 0; $countdown--) {
+        Write-Host "  Starting in $countdown... " -NoNewline -ForegroundColor DarkGray
+        Start-Sleep -Milliseconds 800
+        # Check if user already typed something
+        if ([Console]::KeyAvailable) {
+            $key = [Console]::ReadKey($true)
+            if ($key.Key -eq "Enter") {
+                $skip = $false
+                break
+            } elseif ($key.KeyChar -match "\d") {
+                $choice = $key.KeyChar.ToString()
+                $skip = $true
+                break
+            }
+        }
+    }
+    Write-Host ""
+
+    if (-not $skip) {
+        if ([string]::IsNullOrEmpty($choice)) {
+            $choice = $defaultIndex.ToString()
+        }
+    }
+}
+
+if ([string]::IsNullOrEmpty($choice)) {
+    $choice = Read-Host "Choice"
+}
 if ([string]::IsNullOrEmpty($choice)) { exit 0 }
 
 # FIX: Always initialize $userVal before passing it as [ref] to TryParse.
@@ -69,6 +120,66 @@ if (-not [int]::TryParse($choice, [ref]$userVal) -or $userVal -lt 1 -or $userVal
 }
 
 $selectedDevice = $mics[$userVal - 1]
+
+# Save selected device as default
+if ($selectedDevice -ne $defaultDevice) {
+    $settings.audio.defaultDevice = $selectedDevice
+    $jsonOut = $settings | ConvertTo-Json -Depth 10
+    [System.IO.File]::WriteAllText($settingsPath, $jsonOut, [System.Text.Encoding]::UTF8)
+    Write-Host "Device saved as default: $selectedDevice" -ForegroundColor Gray
+    Write-Host ""
+}
+
+# --- Level Test (Optional) ---
+Write-Host ""
+Write-Host "Would you like to run a quick level test first? (3 seconds)" -ForegroundColor Cyan
+$doTest = Read-Host "Run level test? [Y/n]"
+
+if ([string]::IsNullOrEmpty($doTest) -or $doTest -eq "Y" -or $doTest -eq "y") {
+    Write-Host ""
+    Write-Host "Testing microphone level (3 seconds)..." -ForegroundColor Yellow
+    Write-Host "Please speak into the microphone now!" -ForegroundColor Red
+    Write-Host ""
+
+    $testFile = Join-Path $scriptDir "_level_test.wav"
+    & "$ffmpegPath" -hide_banner -loglevel error -f dshow -t 3 -i "audio=$selectedDevice" -ar 16000 -ac 1 "$testFile"
+
+    if (Test-Path "$testFile") {
+        $testResult = & "$ffmpegPath" -hide_banner -i "$testFile" -af "volumedetect" -f null nul 2>&1
+        $maxVol = $testResult | Where-Object { $_ -match "max_volume:\s*([-\d.]+)\s*dB" } | ForEach-Object { $Matches[1] }
+
+        if ($null -ne $maxVol) {
+            $maxVolNum = [double]$maxVol
+            Write-Host "  Peak level: ${maxVol} dB" -ForegroundColor White
+
+            if ($maxVolNum -lt -30) {
+                Write-Host "  Status: TOO QUIET" -ForegroundColor Red
+                Write-Host "  Suggestion: Move closer to mic or increase Windows mic gain." -ForegroundColor Yellow
+            } elseif ($maxVolNum -lt -12) {
+                Write-Host "  Status: GOOD" -ForegroundColor Green
+                Write-Host "  Suggestion: Level is appropriate, ready to record." -ForegroundColor Green
+            } elseif ($maxVolNum -lt -3) {
+                Write-Host "  Status: STRONG" -ForegroundColor Cyan
+                Write-Host "  Suggestion: Good level, watch for clipping." -ForegroundColor Yellow
+            } else {
+                Write-Host "  Status: CLIPPING RISK" -ForegroundColor Red
+                Write-Host "  Suggestion: Reduce mic gain or move further away." -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "  Could not detect audio level. The mic may be muted." -ForegroundColor Red
+        }
+
+        Remove-Item "$testFile" -Force -ErrorAction SilentlyContinue
+    } else {
+        Write-Host "  Level test failed. Check if the device is in use." -ForegroundColor Red
+    }
+
+    Write-Host ""
+    Read-Host "Press Enter to continue to recording"
+}
+
+Clear-Host
+
 $time = Get-Date -Format "MMdd_HHmm"
 $fileName = "Record_$time.$($audioConfig.format)"
 $filePath = Join-Path $scriptDir $fileName
