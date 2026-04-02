@@ -12,10 +12,10 @@ echo ========================================
 echo       會議錄音與逐字稿工具
 echo ========================================
 echo.
-echo   [1] 步驟 1：下載必要組件 (FFmpeg, Whisper)
-echo   [2] 步驟 2：開始錄音
-echo   [3] 步驟 3：播放錄音檔案 (ffplay)
-echo   [4] 步驟 4：語音轉文字 (Transcribe)
+echo   [1] 步驟 1：下載必要元件 (只需做一次)
+echo   [2] 步驟 2：開始錄音 (降噪)
+echo   [3] 步驟 3：播放錄音檔
+echo   [4] 步驟 4：語音轉文字 (字幕與逐字稿)
 echo   [Enter] 離開
 echo.
 echo ========================================
@@ -50,7 +50,7 @@ goto :menu
 
 :run_step1
 echo.
-echo 正在執行步驟 1：下載必要組件...
+echo 正在執行步驟 1：下載必要元件...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step1_download-dependencies.ps1"
 if %ERRORLEVEL% neq 0 (
     echo.
@@ -67,7 +67,7 @@ goto :eof
 
 :run_step3
 echo.
-echo 正在執行步驟 3：播放音訊檔案...
+echo 正在執行步驟 3：播放錄音檔...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step3_play-audio.ps1"
 goto :eof
 
