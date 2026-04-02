@@ -97,14 +97,6 @@ Write-Host ""
 $arnndnPath = Join-Path $scriptDir "FFmpeg\$modelFile"
 $hasArnndnModel = Test-Path $arnndnPath
 
-$modelDir = $scriptDir
-$modelCopyPath = Join-Path $modelDir $modelFile
-if ($useArnndn -and $hasArnndnModel -and (Test-Path $arnndnPath)) {
-    if (-not (Test-Path $modelCopyPath)) {
-        Copy-Item $arnndnPath $modelCopyPath -Force
-    }
-}
-
 if ($useArnndn -and -not $hasArnndnModel) {
     Write-Host "Warning: ARNNDN model file not found at $arnndnPath" -ForegroundColor Yellow
     Write-Host "Will process without ARNNDN." -ForegroundColor Yellow

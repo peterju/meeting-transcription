@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>會議錄音轉逐字稿</title>
+    <HTA:APPLICATION
+        APPLICATIONNAME="Meeting Transcription"
+        VERSION="1.0"
+        SINGLEINSTANCE="yes"
+        WINDOWSTATE="normal"
+        SCROLL="no"
+    >
+    <style>
+        body, table, td, div, span, p, button {
+            margin: 0; padding: 0;
+            font-family: "Microsoft JhengHei", "Microsoft YaHei", Arial, sans-serif;
+        }
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #07070f;
+            color: #f0f4f8;
+            overflow: hidden;
+        }
+
+        #shell { padding: 20px 24px 14px 24px; }
+
+        /* ── Header ── */
+        #header {
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2a2a50;
+            margin-bottom: 18px;
+        }
+        #header-table { width: 100%; border-collapse: collapse; }
+        #logo-cell { width: 58px; vertical-align: middle; }
+        #logo-mark {
+            width: 46px; height: 46px;
+            background-color: #131328;
+            border: 2px solid #38bdf8;
+            font-size: 24px;
+            text-align: center;
+            line-height: 46px;
+        }
+        #title-cell { vertical-align: middle; }
+        #main-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+        #sub-title {
+            font-size: 12px;
+            color: #a0b8d0;
+            letter-spacing: 4px;
+            margin-top: 4px;
+        }
+        #badge-cell { vertical-align: middle; text-align: right; }
+        #status-badge {
+            display: inline-block;
+            background-color: #0a2a1a;
+            border: 2px solid #34d399;
+            color: #34d399;
+            padding: 6px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        /* ── Body ── */
+        #body-table { width: 100%; border-collapse: collapse; height: 460px; }
+        #steps-cell { width: 270px; vertical-align: top; padding-right: 20px; }
+        #log-cell { vertical-align: top; }
+
+        .panel-label {
+            font-size: 12px;
+            color: #a0b8d0;
+            letter-spacing: 4px;
+            margin-bottom: 12px;
+            padding-left: 4px;
+            font-weight: bold;
+        }
+
+        /* ── Step buttons ── */
+        .step-btn {
+            width: 100%;
+            /* 明顯比背景淺的卡片色 */
+            background-color: #252542;
+            border: 1px solid #38385e;
+            border-left-width: 5px;
+            padding: 13px 16px;
+            margin-bottom: 9px;
+            cursor: pointer;
+            text-align: left;
+            color: #ffffff;
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            font-size: 15px;
+            box-shadow: 0 5px 18px #00000099;
+        }
+        .step-inner { width: 100%; border-collapse: collapse; }
+        .step-icon-cell { width: 38px; vertical-align: middle; }
+        .step-icon {
+            width: 34px; height: 34px;
+            background-color: #161630;
+            border: 1px solid #38385e;
+            font-size: 17px;
+            text-align: center;
+            line-height: 34px;
+        }
+        .step-text-cell { vertical-align: middle; padding-left: 13px; }
+        .step-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        .step-desc {
+            font-size: 12px;
+            color: #a0b8d0;
+            margin-top: 3px;
+        }
+        .step-arrow-cell {
+            width: 20px; vertical-align: middle;
+            text-align: right; color: #505075; font-size: 20px;
+        }
+
+        /* ── Log panel ── */
+        #log-header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        #log-label {
+            font-size: 12px;
+            color: #a0b8d0;
+            letter-spacing: 4px;
+            vertical-align: middle;
+            font-weight: bold;
+        }
+        #clear-btn {
+            background-color: #1a0808;
+            border: 1px solid #5a2020;
+            color: #f87171;
+            padding: 5px 16px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        #clear-btn:hover { background-color: #f87171; color: #000; }
+
+        #log-box {
+            /* 明顯比背景淺的 console 色 */
+            background-color: #1a1a32;
+            border: 1px solid #38385e;
+            border-top: 3px solid #38bdf8;
+            padding: 16px 18px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 15px;
+            line-height: 2.1;
+            height: 438px;
+            box-shadow: 0 6px 28px #00000099;
+        }
+
+        .log-time { color: #7a95b5; margin-right: 12px; font-size: 13px; }
+        .c-ready { color: #a0b8d0; }
+        .c-ok    { color: #34d399; }
+        .c-run   { color: #38bdf8; }
+        .c-info  { color: #8a9cb8; }
+        .c-err   { color: #f87171; }
+
+        /* ── Footer ── */
+        #footer {
+            text-align: center; padding-top: 10px;
+            font-size: 14px;
+			color: #a0b8d0
+            letter-spacing: 3px;
+            border-top: 1px solid #151525;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+<div id="shell">
+
+    <div id="header">
+        <table id="header-table">
+            <tr>
+                <td id="logo-cell"><div id="logo-mark">&#127897;</div></td>
+                <td id="title-cell">
+                    <div id="main-title">會議錄音轉逐字稿</div>
+                    <div id="sub-title">RECORDING &middot; DENOISE &middot; TRANSCRIBE</div>
+                </td>
+                <td id="badge-cell">
+                    <span id="status-badge">&#9679; READY</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table id="body-table">
+        <tr>
+            <td id="steps-cell">
+                <div class="panel-label">WORKFLOW</div>
+
+                <button class="step-btn" style="border-left-color:#38bdf8;"
+                    onclick="runStep(1)"
+                    onmouseover="hoverOn(this,'#38bdf8')" onmouseout="hoverOff(this)">
+                    <table class="step-inner"><tr>
+                        <td class="step-icon-cell"><div class="step-icon">&#128230;</div></td>
+                        <td class="step-text-cell">
+                            <div class="step-name">下載工具</div>
+                            <div class="step-desc">安裝所需相依套件</div>
+                        </td>
+                        <td class="step-arrow-cell">&rsaquo;</td>
+                    </tr></table>
+                </button>
+
+                <button class="step-btn" style="border-left-color:#34d399;"
+                    onclick="runStep(2)"
+                    onmouseover="hoverOn(this,'#34d399')" onmouseout="hoverOff(this)">
+                    <table class="step-inner"><tr>
+                        <td class="step-icon-cell"><div class="step-icon">&#127908;</div></td>
+                        <td class="step-text-cell">
+                            <div class="step-name">開始錄音</div>
+                            <div class="step-desc">啟動麥克風收音</div>
+                        </td>
+                        <td class="step-arrow-cell">&rsaquo;</td>
+                    </tr></table>
+                </button>
+
+                <button class="step-btn" style="border-left-color:#fbbf24;"
+                    onclick="runStep(3)"
+                    onmouseover="hoverOn(this,'#fbbf24')" onmouseout="hoverOff(this)">
+                    <table class="step-inner"><tr>
+                        <td class="step-icon-cell"><div class="step-icon">&#128266;</div></td>
+                        <td class="step-text-cell">
+                            <div class="step-name">後製降噪</div>
+                            <div class="step-desc">濾除環境雜音</div>
+                        </td>
+                        <td class="step-arrow-cell">&rsaquo;</td>
+                    </tr></table>
+                </button>
+
+                <button class="step-btn" style="border-left-color:#f87171;"
+                    onclick="runStep(4)"
+                    onmouseover="hoverOn(this,'#f87171')" onmouseout="hoverOff(this)">
+                    <table class="step-inner"><tr>
+                        <td class="step-icon-cell"><div class="step-icon">&#9654;</div></td>
+                        <td class="step-text-cell">
+                            <div class="step-name">播放錄音</div>
+                            <div class="step-desc">確認音訊品質</div>
+                        </td>
+                        <td class="step-arrow-cell">&rsaquo;</td>
+                    </tr></table>
+                </button>
+
+                <button class="step-btn" style="border-left-color:#c084fc;"
+                    onclick="runStep(5)"
+                    onmouseover="hoverOn(this,'#c084fc')" onmouseout="hoverOff(this)">
+                    <table class="step-inner"><tr>
+                        <td class="step-icon-cell"><div class="step-icon">&#128221;</div></td>
+                        <td class="step-text-cell">
+                            <div class="step-name">語音轉文字</div>
+                            <div class="step-desc">AI 辨識產出逐字稿</div>
+                        </td>
+                        <td class="step-arrow-cell">&rsaquo;</td>
+                    </tr></table>
+                </button>
+
+                <button class="step-btn" style="border-left-color:#64748b; margin-top:8px;"
+                    onclick="openFolder()"
+                    onmouseover="hoverOn(this,'#64748b')" onmouseout="hoverOff(this)">
+                    <table class="step-inner"><tr>
+                        <td class="step-icon-cell"><div class="step-icon">&#128193;</div></td>
+                        <td class="step-text-cell">
+                            <div class="step-name" style="color:#c0d0e0;">開啟資料夾</div>
+                            <div class="step-desc">瀏覽輸出檔案</div>
+                        </td>
+                        <td class="step-arrow-cell">&rsaquo;</td>
+                    </tr></table>
+                </button>
+            </td>
+
+            <td id="log-cell">
+                <table id="log-header-table"><tr>
+                    <td id="log-label">CONSOLE &middot; 執行狀態</td>
+                    <td style="text-align:right;">
+                        <button id="clear-btn" onclick="clearLog()">清除記錄</button>
+                    </td>
+                </tr></table>
+                <div id="log-box"></div>
+            </td>
+        </tr>
+    </table>
+
+    <div id="footer">meeting-transcription &middot; By Peter Ju</div>
+</div>
+
+<script language="JScript">
+var shell = new ActiveXObject("WScript.Shell");
+var currentDir = "";
+
+function init() {
+    try {
+        var htaPath = document.location.pathname;
+        currentDir = htaPath.replace(/\//g, "\\").replace(/^\\/, "");
+        var lastSlash = currentDir.lastIndexOf("\\");
+        if (lastSlash > 0) { currentDir = currentDir.substring(0, lastSlash); }
+        addLine("系統就緒。請點擊左側步驟開始執行。", "c-ready");
+        addLine("工作目錄：" + currentDir, "c-info");
+    } catch(e) {
+        addLine("Init error: " + e.message, "c-err");
+    }
+}
+
+function getTS() {
+    var t = new Date();
+    var hh = t.getHours();   if (hh < 10) { hh = "0" + hh; }
+    var mm = t.getMinutes(); if (mm < 10) { mm = "0" + mm; }
+    var ss = t.getSeconds(); if (ss < 10) { ss = "0" + ss; }
+    return hh + ":" + mm + ":" + ss;
+}
+
+function addLine(msg, cls) {
+    var box = document.getElementById("log-box");
+    var row = document.createElement("div");
+    var time = document.createElement("span");
+    time.className = "log-time";
+    time.innerHTML = "&rsaquo; " + getTS() + "  ";
+    var txt = document.createElement("span");
+    txt.className = cls || "c-ok";
+    txt.innerHTML = msg;
+    row.appendChild(time);
+    row.appendChild(txt);
+    box.appendChild(row);
+    box.scrollTop = box.scrollHeight;
+}
+
+function clearLog() {
+    document.getElementById("log-box").innerHTML = "";
+    addLine("記錄已清除。", "c-info");
+}
+
+function runStep(step) {
+    var scripts = {
+        1: "step1_download-dependencies.ps1",
+        2: "step2_record-audio.ps1",
+        3: "step3_denoise-audio.ps1",
+        4: "step4_play-audio.ps1",
+        5: "step5_transcribe-audio.ps1"
+    };
+    var names = {
+        1: "下載工具",
+        2: "開始錄音",
+        3: "後製降噪",
+        4: "播放錄音",
+        5: "語音轉文字"
+    };
+
+    var scriptName = scripts[step];
+    addLine("執行步驟 " + step + " &middot; <b>" + names[step] + "</b>", "c-run");
+
+    try {
+        // Use SysNative to access 64-bit PowerShell from 32-bit HTA
+        var psPath = "C:\\Windows\\SysNative\\WindowsPowerShell\\v1.0\\powershell.exe";
+        var cmd = "\"" + psPath + "\" -NoProfile -ExecutionPolicy Bypass -File \"" + currentDir + "\\" + scriptName + "\"";
+        shell.Run(cmd, 1, false);
+        addLine("已啟動 " + scriptName, "c-info");
+    } catch(e) {
+        addLine("錯誤：" + e.message, "c-err");
+    }
+}
+
+function openFolder() {
+    try {
+        shell.Run("explorer \"" + currentDir + "\"", 1, false);
+        addLine("已開啟資料夾", "c-info");
+    } catch(e) {
+        addLine("錯誤：" + e.message, "c-err");
+    }
+}
+
+function hoverOn(btn, color) {
+    btn.style.backgroundColor = "#2e2e50";
+    btn.style.borderTopColor = color;
+    btn.style.borderRightColor = color;
+    btn.style.borderBottomColor = color;
+}
+
+function hoverOff(btn) {
+    btn.style.backgroundColor = "#252542";
+    btn.style.borderTopColor = "#38385e";
+    btn.style.borderRightColor = "#38385e";
+    btn.style.borderBottomColor = "#38385e";
+}
+
+window.onload = init;
+</script>
+</body>
+</html>

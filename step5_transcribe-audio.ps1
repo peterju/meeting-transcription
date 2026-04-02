@@ -34,15 +34,17 @@ if (-not (Test-Path "$modelPath")) {
 # Load Module
 Write-Host "Loading WhisperPS module..." -ForegroundColor Gray
 $userModulesPath = Join-Path $env:USERPROFILE "Documents\WindowsPowerShell\Modules"
-if ($env:PSModulePath -notlike "*$userModulesPath*") {
-    $env:PSModulePath = "$userModulesPath;$env:PSModulePath"
-}
-try {
-    Import-Module WhisperPS -DisableNameChecking -ErrorAction Stop
-} catch {
-    Write-Host "Error: WhisperPS module not found." -ForegroundColor Red
-    Write-Host "Please run Step 1 to install the module." -ForegroundColor Yellow
-    Read-Host; exit 1
+$whisperPSModulePath = Join-Path $userModulesPath "WhisperPS"
+if (Test-Path $whisperPSModulePath) {
+    Import-Module $whisperPSModulePath -DisableNameChecking -ErrorAction Stop
+} else {
+    try {
+        Import-Module WhisperPS -DisableNameChecking -ErrorAction Stop
+    } catch {
+        Write-Host "Error: WhisperPS module not found." -ForegroundColor Red
+        Write-Host "Please run Step 1 to install the module." -ForegroundColor Yellow
+        Read-Host; exit 1
+    }
 }
 
 # Load Model
