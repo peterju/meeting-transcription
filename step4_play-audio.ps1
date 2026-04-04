@@ -6,16 +6,15 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 if ([string]::IsNullOrEmpty($scriptDir)) { $scriptDir = "." }
+
+chcp 65001 | Out-Null
+[Console]::InputEncoding  = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 $ffplayPath = Join-Path $scriptDir "FFmpeg\ffplay.exe"
-
-Write-Host "========================================"
-Write-Host "  Audio Player (ffplay)"
-Write-Host "========================================"
-Write-Host ""
-
 if (-not (Test-Path "$ffplayPath")) {
     Write-Host "Error: ffplay.exe not found. Please run Step 1." -ForegroundColor Red
-    Read-Host; exit 1
+    Read-Host "Press Enter to exit"; exit 1
 }
 
 # Search audio

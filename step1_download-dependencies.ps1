@@ -8,6 +8,11 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 if ([string]::IsNullOrEmpty($scriptDir)) { $scriptDir = "." }
 
+if (-not (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
+    Write-Host "Error: curl.exe not found. Please ensure curl is in your PATH." -ForegroundColor Red
+    pause; exit 1
+}
+
 # --- Load settings from JSON ---
 $settingsPath = Join-Path $scriptDir "settings.json"
 if (-not (Test-Path "$settingsPath")) {

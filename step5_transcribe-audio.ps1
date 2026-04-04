@@ -19,6 +19,7 @@ $settings = $jsonStr | ConvertFrom-Json
 $transConfig = $settings.transcription
 
 $whisperDir = Join-Path $scriptDir "WhisperDesktop"
+$whisperExePath = Join-Path $whisperDir "WhisperDesktop.exe"
 $modelPath = Join-Path $whisperDir "ggml-medium.bin"
 
 Write-Host "========================================"
@@ -26,9 +27,14 @@ Write-Host "  Step 4: Audio Transcription (Whisper)"
 Write-Host "========================================"
 Write-Host ""
 
+if (-not (Test-Path "$whisperExePath")) {
+    Write-Host "Error: WhisperDesktop.exe not found. Please run Step 1." -ForegroundColor Red
+    Read-Host "Press Enter to exit"; exit 1
+}
+
 if (-not (Test-Path "$modelPath")) {
     Write-Host "Error: Model file not found. Please run Step 1." -ForegroundColor Red
-    Read-Host; exit 1
+    Read-Host "Press Enter to exit"; exit 1
 }
 
 # Load Module

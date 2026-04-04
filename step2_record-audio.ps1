@@ -130,6 +130,24 @@ if ($selectedDevice -ne $defaultDevice) {
     Write-Host ""
 }
 
+# Check available disk space (warn if less than 500 MB)
+try {
+    $driveLetter = (Split-Path $scriptDir -Qualifier).TrimEnd(':')
+    $drive = (Get-PSDrive -Name $driveLetter -ErrorAction Stop)
+    $freeMB = [math]::Round($drive.Free / 1MB, 0)
+    $freeGB = [math]::Round($drive.Free / 1GB, 1)
+    if ($freeMB -lt 500) {
+        Write-Host "Warning: Only ${freeMB} MB ($([math]::Round($drive.Free / 1GB, 2)) GB) free on disk." -ForegroundColor Red
+        Write-Host "Recording may fail due to insufficient space." -ForegroundColor Red
+        $confirm = Read-Host "Continue anyway? [y/N]"
+        if ($confirm -ne "y" -and $confirm -ne "Y") { exit 0 }
+    } else {
+        Write-Host "Disk space available: ${freeGB} GB" -ForegroundColor Gray
+    }
+} catch {
+    Write-Host "Could not determine disk space." -ForegroundColor Yellow
+}
+
 # --- Level Test (Optional) ---
 Write-Host ""
 Write-Host "Would you like to run a quick level test first? (3 seconds)" -ForegroundColor Cyan
