@@ -27,13 +27,31 @@ $recordConfig = $settings.record
 $profiles = $recordConfig.profiles
 $activeProfileName = $recordConfig.activeProfile
 
-$profile = $profiles.$activeProfileName
-$profileName = $profile.name
-
 Write-Host "========================================"
 Write-Host "  Audio Post-Processing (Noise Reduction)" -ForegroundColor Cyan
 Write-Host "========================================"
 Write-Host ""
+
+$profile = $profiles.$activeProfileName
+
+if ($null -eq $profile) {
+    Write-Host "Warning: Profile '$activeProfileName' not found in settings.json." -ForegroundColor Yellow
+    Write-Host "Using top-level settings as fallback." -ForegroundColor Yellow
+    Write-Host ""
+    $useArnndn = $false
+    $gateValue = $recordConfig.gate
+    $lowpassValue = $recordConfig.lowpass
+    $hipassValue = $recordConfig.hipass
+    $profileName = "(default)"
+} else {
+    $useArnndn = $profile.arnndn.enabled
+    $modelFile = $profile.arnndn.model
+    $gateValue = if ($null -ne $profile.gate) { $profile.gate } else { $recordConfig.gate }
+    $lowpassValue = if ($null -ne $profile.lowpass) { $profile.lowpass } else { $recordConfig.lowpass }
+    $hipassValue = if ($null -ne $profile.hipass) { $profile.hipass } else { $recordConfig.hipass }
+    $profileName = $profile.name
+}
+
 Write-Host "Current profile: $profileName" -ForegroundColor Yellow
 Write-Host ""
 
@@ -80,22 +98,20 @@ if ($selection -eq "A" -or $selection -eq "a") {
     pause; exit 1
 }
 
-$useArnndn = $profile.arnndn.enabled
-$modelFile = $profile.arnndn.model
-$gateValue = if ($null -ne $profile.gate) { $profile.gate } else { $recordConfig.gate }
-$lowpassValue = if ($null -ne $profile.lowpass) { $profile.lowpass } else { $recordConfig.lowpass }
-$hipassValue = if ($null -ne $profile.hipass) { $profile.hipass } else { $recordConfig.hipass }
-
 Write-Host ""
-Write-Host "Profile: $profileName" -ForegroundColor Green
+Write-Host "Active settings:" -ForegroundColor Green
 Write-Host "  ARNNDN: $(if ($useArnndn) { 'Enabled' } else { 'Disabled' })"
 Write-Host "  Gate: $gateValue dB"
 Write-Host "  Lowpass: $lowpassValue Hz"
 Write-Host "  Hipass: $hipassValue Hz"
 Write-Host ""
 
-$arnndnPath = Join-Path $scriptDir "FFmpeg\$modelFile"
-$hasArnndnModel = Test-Path $arnndnPath
+$hasArnndnModel = $false
+if ($useArnndn) {
+    $modelFile = if ($null -ne $profile.arnndn.model) { $profile.arnndn.model } else { "bd.rnnn" }
+    $arnndnPath = Join-Path $scriptDir "FFmpeg\$modelFile"
+    $hasArnndnModel = Test-Path $arnndnPath
+}
 
 if ($useArnndn -and -not $hasArnndnModel) {
     Write-Host "Warning: ARNNDN model file not found at $arnndnPath" -ForegroundColor Yellow
@@ -134,6 +150,16 @@ Write-Host ""
 Write-Host "Processing..." -ForegroundColor Cyan
 Write-Host ""
 
+function Test-AudioContent {
+    param([string]$filePath)
+    $result = & "$ffmpegPath" -hide_banner -i "$filePath" -af "volumedetect" -f null nul 2>&1
+    $maxVol = $result | Where-Object { $_ -match "max_volume:\s*([-\d.]+)\s*dB" } | ForEach-Object { $Matches[1] }
+    if ($null -ne $maxVol -and [double]$maxVol -gt -60) {
+        return @{ Valid = $true; MaxVolume = $maxVol }
+    }
+    return @{ Valid = $false; MaxVolume = $null }
+}
+
 foreach ($file in $filesToProcess) {
     $baseName = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
     $ext = $file.Extension
@@ -143,22 +169,21 @@ foreach ($file in $filesToProcess) {
     Write-Host "Processing: $($file.Name) -> $outputName"
 
     $ffmpegArgs = @("-i", $file.FullName, "-af", $afString, "-y", "$outputPath")
-    $result = & "$ffmpegPath" @ffmpegArgs 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  FFmpeg error output:" -ForegroundColor Red
-        $result | Select-Object -Last 5
-    }
+    & "$ffmpegPath" @ffmpegArgs 2>&1 | Out-Null
 
-    if (Test-Path $outputPath) {
-        $size = (Get-Item $outputPath).Length
-        if ($size -gt 1000) {
-            Write-Host "  Saved: $outputName" -ForegroundColor Green
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  Error: FFmpeg exited with code $LASTEXITCODE." -ForegroundColor Red
+        if (Test-Path $outputPath) { Remove-Item $outputPath -Force -ErrorAction SilentlyContinue }
+    } elseif (Test-Path $outputPath) {
+        $audioCheck = Test-AudioContent $outputPath
+        if ($audioCheck.Valid) {
+            Write-Host "  Saved: $outputName (max volume: $($audioCheck.MaxVolume) dB)" -ForegroundColor Green
         } else {
-            Write-Host "  Error: Output file is empty." -ForegroundColor Red
+            Write-Host "  Error: Output file has no audio content." -ForegroundColor Red
             Remove-Item $outputPath -Force
         }
     } else {
-        Write-Host "  Error: Failed to create output file." -ForegroundColor Red
+        Write-Host "  Error: Output file not created." -ForegroundColor Red
     }
 }
 

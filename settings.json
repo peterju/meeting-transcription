@@ -2,11 +2,11 @@
     "urls": {
         "purpose": "此區塊定義『步驟 1：下載』的相關設定。",
         "ffmpegReleaseBase": "https://github.com/GyanD/codexffmpeg/releases/download/",
+        "ffmpegFallback": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+        "arnndnModel": "https://raw.githubusercontent.com/richardpl/arnndn-models/master/bd.rnnn",
         "whisperDesktop": "https://github.com/Const-me/Whisper/releases/download/1.12.0/WhisperDesktop.zip",
         "whisperPS": "https://github.com/Const-me/Whisper/releases/download/1.12.0/WhisperPS.zip",
-        "whisperModel": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
-        "ffmpegFallback": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
-        "arnndnModel": "https://raw.githubusercontent.com/richardpl/arnndn-models/master/bd.rnnn"
+        "whisperModel": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin"
     },
     "audio": {
         "purpose": "此區塊設定『步驟 2：錄音』。您可以更改格式 (mp3/m4a)或其品質",
