@@ -37,7 +37,7 @@ if (-not (Test-Path $modelPath)) {
     Read-Host "Press Enter to exit"; exit 1
 }
 
-# Map WhisperPS-style language names to whisper CLI language codes
+# Map settings.json language names to whisper CLI language codes
 $langMap = @{
     "Chinese"    = "zh"
     "Japanese"   = "ja"
