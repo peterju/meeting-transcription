@@ -42,7 +42,7 @@ Windows 離線工具，用 FFmpeg + WhisperDesktop 完成「錄音 → 降噪 �
 ## Git 提交規範
 
 - 所有 commit 訊息必須遵守 Conventional Commits：`<type>(<scope>): <description>`，描述使用祈使句。
-- 詳細規範與範例請參閱 [CONVENTIONAL_COMMITS.md](doc/CONVENTIONAL_COMMITS.md)。
+- 詳細規範與範例請參閱 [conventional_commits.md](doc/conventional_commits.md)。
 
 ## 可用 CLI 工具
 
