@@ -100,8 +100,8 @@
 
 開啟 [`settings.json`](settings.json) 可調整：
 
-| 參數                     | 說明                           | 預設值               |
-| ------------------------ | ------------------------------ | -------------------- |
+| 參數                       | 說明                           | 預設值               |
+| -------------------------- | ------------------------------ | -------------------- |
 | `audio.format`           | 錄音格式（mp3 / m4a）          | m4a                  |
 | `audio.m4aQuality`       | M4A 位元率 (kbps)              | 192                  |
 | `audio.mp3Quality`       | MP3 品質 (0-9, 越小越好)       | 2                    |
@@ -171,13 +171,13 @@
 ├── menuCli.cmd                         # 主選單入口 (CLI)
 ├── menuGui.hta                         # 主選單入口 (GUI)
 ├── settings.json                       # 集中設定檔 (JSON 格式)
-├── step1_download-dependencies.ps1    # 自動化工具下載
-├── step2_record-audio.ps1             # 錄音處理（含電平測試）
-├── step3_denoise-audio.ps1             # 後製降噪處理
-├── step4_play-audio.ps1                # 音訊播放處理
-├── step5_transcribe-audio.ps1          # Whisper 轉錄處理
-├── step6_manage-files.ps1             # 音訊檔案管理（列出/刪除/重新命名）
-├── step7_volume-adjust.ps1            # 音量分析與增益調整
+├── step1_download-dependencies.ps1     # 自動化工具下載
+├── step2_record-audio.ps1              # 錄音處理（含電平測試）
+├── step3_play-audio.ps1                # 音訊播放處理
+├── step4_transcribe-audio.ps1          # Whisper 轉錄處理
+├── uty1_manage-files.ps1               # 音訊檔案管理（列出/刪除/重新命名）
+├── uty2_volume-adjust.ps1              # 音量分析與增益調整
+├── uty3_denoise-audio.ps1              # 後製降噪處理
 ├── README.md                           # 專案說明
 ├── AGENTS.md                           # AI Agent 專案規則（供 Copilot/Codex 等讀取）
 ├── doc/                                # 開發參考文件

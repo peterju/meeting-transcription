@@ -5,8 +5,8 @@
         "ffmpegFallback": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
         "arnndnModel": "https://raw.githubusercontent.com/richardpl/arnndn-models/master/bd.rnnn",
         "whisperDesktop": "https://github.com/Const-me/Whisper/releases/download/1.12.0/WhisperDesktop.zip",
-    "whisperCli": "https://github.com/Const-me/Whisper/releases/download/1.12.0/cli.zip",
-            "whisperModel": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin"
+        "whisperCli": "https://github.com/Const-me/Whisper/releases/download/1.12.0/cli.zip",
+        "whisperModel": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin"
     },
     "audio": {
         "purpose": "此區塊設定『步驟 2：錄音』。您可以更改格式 (mp3/m4a)或其品質",
