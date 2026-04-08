@@ -20,4 +20,7 @@ FFmpeg/
 
 # 系統檔案
 .DS_Store
+
+# 編輯器設定
+.vscode/
 Thumbs.db
