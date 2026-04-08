@@ -284,7 +284,7 @@
                         <td class="step-icon-cell"><div class="step-icon">&#128264;</div></td>
                         <td class="step-text-cell">
                             <div class="step-name">音量調整</div>
-                            <div class="step-desc">分析音量並增減增益</div>
+                            <div class="step-desc">EBU R128 兩段式音量正規化</div>
                         </td>
                         <td class="step-arrow-cell">&rsaquo;</td>
                     </tr></table>
@@ -371,8 +371,8 @@ function runStep(step) {
         3: "step3_denoise-audio.ps1",
         4: "step4_play-audio.ps1",
         5: "step5_transcribe-audio.ps1",
-        6: "step6_manage-files.ps1",
-        7: "step7_volume-adjust.ps1"
+        6: "uty1_manage-files.ps1",
+        7: "uty2_volume-adjust.ps1"
     };
     var names = {
         1: "下載工具",
@@ -381,7 +381,7 @@ function runStep(step) {
         4: "播放錄音",
         5: "語音轉文字",
         6: "檔案管理",
-        7: "音量調整"
+        7: "音量正規化"
     };
 
     var scriptName = scripts[step];

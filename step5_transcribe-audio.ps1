@@ -115,6 +115,27 @@ foreach ($file in $filesToProcess) {
         }
     }
 
+    # Preprocess: trim leading/trailing silence and normalize loudness (loudnorm -16 LUFS).
+    # Creates a temporary 16kHz mono WAV. Falls back to original file if FFmpeg fails.
+    $prepFile = $null
+    $inputForWhisper = $file.FullName
+    if (Test-Path $ffmpegPath) {
+        $prepWav = Join-Path (Split-Path $file.FullName -Parent) `
+        ([System.IO.Path]::GetFileNameWithoutExtension($file.Name) + "_prep.wav")
+        $afPrep = "silenceremove=start_periods=1:start_silence=0.3:start_threshold=-50dB" +
+        ":stop_periods=-1:stop_silence=0.5:stop_threshold=-50dB" +
+        ",loudnorm=I=-16:TP=-1.5:LRA=11"
+        Write-Host "  Preprocessing: trim silence + loudnorm..." -ForegroundColor Gray
+        & "$ffmpegPath" -y -i $file.FullName -vn -af $afPrep -ar 16000 -ac 1 $prepWav 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0 -and (Test-Path $prepWav)) {
+            $prepFile = $prepWav
+            $inputForWhisper = $prepWav
+        }
+        else {
+            Write-Host "  Preprocessing failed, using original file." -ForegroundColor Yellow
+        }
+    }
+
     Write-Host "  Transcribing... (this may take a while)" -ForegroundColor Cyan
     $startTime = Get-Date
 
@@ -127,7 +148,7 @@ foreach ($file in $filesToProcess) {
         "-otxt", "-osrt",
         "-nt", "-nc",
         "--prompt", $transConfig.prompt,
-        "-f", $file.FullName
+        "-f", $inputForWhisper
     )
     $cliOutput = & $mainExePath @cmdArgs 2>&1
     $cliExit = $LASTEXITCODE
@@ -136,6 +157,7 @@ foreach ($file in $filesToProcess) {
     $elapsedStr = "{0:N0} min {1:N0} sec" -f $elapsed.TotalMinutes, $elapsed.Seconds
 
     if ($cliExit -ne 0) {
+        if ($null -ne $prepFile) { Remove-Item $prepFile -Force -ErrorAction SilentlyContinue }
         Write-Host ""
         Write-Host "  Transcription failed (exit $cliExit):" -ForegroundColor Red
         $cliOutput | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
@@ -146,6 +168,15 @@ foreach ($file in $filesToProcess) {
 
         $txtPath = [System.IO.Path]::ChangeExtension($file.FullName, ".txt")
         $srtPath = [System.IO.Path]::ChangeExtension($file.FullName, ".srt")
+
+        # If preprocessing was used, move outputs from prep names to final names, then delete temp WAV
+        if ($null -ne $prepFile) {
+            $prepTxt = [System.IO.Path]::ChangeExtension($prepFile, ".txt")
+            $prepSrt = [System.IO.Path]::ChangeExtension($prepFile, ".srt")
+            if (Test-Path $prepTxt) { Move-Item $prepTxt $txtPath -Force }
+            if (Test-Path $prepSrt) { Move-Item $prepSrt $srtPath -Force }
+            Remove-Item $prepFile -Force -ErrorAction SilentlyContinue
+        }
 
         if (Test-Path $txtPath) {
             Write-Host "  Saved TXT: $(Split-Path $txtPath -Leaf)" -ForegroundColor Green

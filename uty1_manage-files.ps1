@@ -1,11 +1,11 @@
-# step6_manage-files.ps1
+# uty1_manage-files.ps1
 # Manage audio files: list, delete, rename
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 if ([string]::IsNullOrEmpty($scriptDir)) { $scriptDir = "." }
 
 chcp 65001 | Out-Null
-[Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 function Get-AudioFiles {
@@ -37,7 +37,8 @@ function Get-AudioDuration {
         $totalSecs = $mins + $secs
         if ($totalSecs -ge 3600) {
             return "{0:N0} min" -f ($totalSecs / 60)
-        } else {
+        }
+        else {
             return "{0:N0} sec" -f $totalSecs
         }
     }
@@ -94,12 +95,14 @@ while ($true) {
                 $newPath = Join-Path $scriptDir $newName
                 if (Test-Path $newPath) {
                     Write-Host "A file with that name already exists." -ForegroundColor Red
-                } else {
+                }
+                else {
                     Rename-Item $oldFile.FullName -NewName $newName -Force
                     Write-Host "Renamed to: $newName" -ForegroundColor Green
                 }
             }
-        } else {
+        }
+        else {
             Write-Host "Invalid number." -ForegroundColor Red
         }
         Read-Host "Press Enter to continue"
@@ -130,10 +133,12 @@ while ($true) {
                     Remove-Item $srtPath -Force
                     Write-Host "Deleted: $baseName.srt" -ForegroundColor Green
                 }
-            } else {
+            }
+            else {
                 Write-Host "Cancelled." -ForegroundColor Gray
             }
-        } else {
+        }
+        else {
             Write-Host "Invalid number." -ForegroundColor Red
         }
         Read-Host "Press Enter to continue"
@@ -149,11 +154,13 @@ while ($true) {
             Write-Host ""
             Write-Host "Playing: $($selectedFile.Name)" -ForegroundColor Green
             & "$ffplayPath" -nodisp -autoexit -hide_banner -loglevel warning "$($selectedFile.FullName)"
-        } else {
+        }
+        else {
             Write-Host "ffplay.exe not found. Run Step 1 first." -ForegroundColor Red
         }
         Read-Host "Press Enter to continue"
-    } else {
+    }
+    else {
         Write-Host "Invalid choice." -ForegroundColor Red
         Read-Host "Press Enter to continue"
     }

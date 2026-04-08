@@ -17,8 +17,8 @@ echo   [2] 步驟 2：錄音
 echo   [3] 步驟 3：後製降噪
 echo   [4] 步驟 4：播放錄音
 echo   [5] 步驟 5：語音轉文字
-echo   [6] 步驟 6：檔案管理
-echo   [7] 步驟 7：音量調整
+echo   [6] 工具 1：檔案管理
+echo   [7] 工具 2：音量正規化
 echo   [Enter] 退出
 echo.
 echo ========================================
@@ -100,12 +100,12 @@ goto :eof
 
 :run_step6
 echo.
-echo 正在執行步驟 6：檔案管理...
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step6_manage-files.ps1"
+echo 正在執行工具 1：檔案管理...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0uty1_manage-files.ps1"
 goto :eof
 
 :run_step7
 echo.
-echo 正在執行步驟 7：音量調整...
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step7_volume-adjust.ps1"
+echo 正在執行工具 2：音量正規化...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0uty2_volume-adjust.ps1"
 goto :eof

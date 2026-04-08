@@ -8,17 +8,17 @@ Windows 離線工具，用 FFmpeg + WhisperDesktop 完成「錄音 → 降噪 �
 
 ## 腳本分工
 
-| 腳本                              | 功能                                                                       | 輸出                          |
-| --------------------------------- | -------------------------------------------------------------------------- | ----------------------------- |
-| `menuCli.cmd`                     | CLI 主選單，設定 `chcp 950` 後以 `powershell.exe` 啟動各 step              | —                             |
-| `menuGui.hta`                     | GUI 主選單（mshta.exe 32-bit），透過 `SysNative` 啟動 64-bit PS            | —                             |
-| `step1_download-dependencies.ps1` | 下載 FFmpeg、WhisperDesktop（含 `main.exe` CLI）、ggml-medium.bin、bd.rnnn | `FFmpeg/`、`WhisperDesktop/`  |
-| `step2_record-audio.ps1`          | 列出 dshow 裝置、錄音、記憶上次裝置                                        | 根目錄 `{timestamp}.m4a/.mp3` |
-| `step3_denoise-audio.ps1`         | 依 active profile 套 ARNNDN + gate + lowpass/hipass                        | `{name}_denoised.{ext}`       |
-| `step4_play-audio.ps1`            | 用 ffplay 播放選定音訊                                                     | —                             |
-| `step5_transcribe-audio.ps1`      | `main.exe` CLI 語音轉文字（`-otxt -osrt`）                                 | `{name}.txt` + `{name}.srt`   |
-| `step6_manage-files.ps1`          | 列出/重新命名/刪除音訊（刪除時一併移除 .txt/.srt）                         | —                             |
-| `step7_volume-adjust.ps1`         | volumedetect 分析 + 增益調整                                               | `{name}_vol{n}dB.{ext}`       |
+| 腳本                              | 功能                                                                                | 輸出                          |
+| --------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------- |
+| `menuCli.cmd`                     | CLI 主選單，設定 `chcp 950` 後以 `powershell.exe` 啟動各 step                       | —                             |
+| `menuGui.hta`                     | GUI 主選單（mshta.exe 32-bit），透過 `SysNative` 啟動 64-bit PS                     | —                             |
+| `step1_download-dependencies.ps1` | 下載 FFmpeg、WhisperDesktop（含 `main.exe` CLI）、ggml-medium.bin、bd.rnnn          | `FFmpeg/`、`WhisperDesktop/`  |
+| `step2_record-audio.ps1`          | 列出 dshow 裝置、錄音、記憶上次裝置                                                 | 根目錄 `{timestamp}.m4a/.mp3` |
+| `step3_denoise-audio.ps1`         | 依 active profile 套 ARNNDN + gate + lowpass/hipass                                 | `{name}_denoised.{ext}`       |
+| `step4_play-audio.ps1`            | 用 ffplay 播放選定音訊                                                              | —                             |
+| `step5_transcribe-audio.ps1`      | FFmpeg 前處理（靜音切除 + loudnorm）再送 `main.exe` CLI 語音轉文字（`-otxt -osrt`） | `{name}.txt` + `{name}.srt`   |
+| `uty1_manage-files.ps1`           | 列出/重新命名/刪除音訊（刪除時一並移除 .txt/.srt）                                  | —                             |
+| `uty2_volume-adjust.ps1`          | EBU R128 兩段式 loudnorm 音量分析與正規化                                           | `{name}_norm.{ext}`           |
 
 > 新增步驟時，請讀取並遵循 [.github/skills/add-step/SKILL.md](.github/skills/add-step/SKILL.md) 的流程。
 
