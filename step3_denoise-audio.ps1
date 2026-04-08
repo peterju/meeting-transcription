@@ -20,7 +20,7 @@ if (-not (Test-Path "$ffmpegPath")) {
 }
 
 chcp 65001 | Out-Null
-[Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 $recordConfig = $settings.record
@@ -43,7 +43,8 @@ if ($null -eq $profile) {
     $lowpassValue = $recordConfig.lowpass
     $hipassValue = $recordConfig.hipass
     $profileName = "(default)"
-} else {
+}
+else {
     $useArnndn = $profile.arnndn.enabled
     $modelFile = $profile.arnndn.model
     $gateValue = if ($null -ne $profile.gate) { $profile.gate } else { $recordConfig.gate }
@@ -59,7 +60,7 @@ $audioFiles = @()
 $allFiles = Get-ChildItem -Path $scriptDir -File
 foreach ($f in $allFiles) {
     $ext = $f.Extension.ToLower()
-    if ($ext -match '\.(mp3|wav|m4a|wma|ogg|flac)$' -and $f.Name -notmatch '^(WhisperDesktop|FFmpeg|temp|test|.*_denoised)') {
+    if ($ext -match '\.(mp3|wav|m4a|wma|ogg|flac|mp4|mkv)$' -and $f.Name -notmatch '^(WhisperDesktop|FFmpeg|temp|test|.*_denoised)') {
         $audioFiles += $f
     }
 }
@@ -85,15 +86,18 @@ if ([string]::IsNullOrEmpty($selection)) { exit 0 }
 $filesToProcess = @()
 if ($selection -eq "A" -or $selection -eq "a") {
     $filesToProcess = $audioFiles
-} elseif ($selection -match "^\d+$") {
+}
+elseif ($selection -match "^\d+$") {
     $idx = [int]$selection - 1
     if ($idx -ge 0 -and $idx -lt $audioFiles.Count) {
         $filesToProcess = @($audioFiles[$idx])
-    } else {
+    }
+    else {
         Write-Host "Invalid selection." -ForegroundColor Red
         pause; exit 1
     }
-} else {
+}
+else {
     Write-Host "Invalid selection." -ForegroundColor Red
     pause; exit 1
 }
@@ -168,21 +172,34 @@ foreach ($file in $filesToProcess) {
 
     Write-Host "Processing: $($file.Name) -> $outputName"
 
-    $ffmpegArgs = @("-i", $file.FullName, "-af", $afString, "-y", "$outputPath")
+    $isVideo = $file.Extension -match '^\.(mp4|mkv)$'
+    if ($isVideo) {
+        # Copy video stream, re-encode audio with the denoise filter chain
+        $ffmpegArgs = @("-i", $file.FullName,
+            "-map", "0:v", "-c:v", "copy",
+            "-map", "0:a", "-af", $afString, "-c:a", "aac",
+            "-y", "$outputPath")
+    }
+    else {
+        $ffmpegArgs = @("-i", $file.FullName, "-af", $afString, "-y", "$outputPath")
+    }
     & "$ffmpegPath" @ffmpegArgs 2>&1 | Out-Null
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "  Error: FFmpeg exited with code $LASTEXITCODE." -ForegroundColor Red
         if (Test-Path $outputPath) { Remove-Item $outputPath -Force -ErrorAction SilentlyContinue }
-    } elseif (Test-Path $outputPath) {
+    }
+    elseif (Test-Path $outputPath) {
         $audioCheck = Test-AudioContent $outputPath
         if ($audioCheck.Valid) {
             Write-Host "  Saved: $outputName (max volume: $($audioCheck.MaxVolume) dB)" -ForegroundColor Green
-        } else {
+        }
+        else {
             Write-Host "  Error: Output file has no audio content." -ForegroundColor Red
             Remove-Item $outputPath -Force
         }
-    } else {
+    }
+    else {
         Write-Host "  Error: Output file not created." -ForegroundColor Red
     }
 }

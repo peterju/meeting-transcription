@@ -23,7 +23,7 @@ Write-Host "Searching for audio files..." -ForegroundColor Gray
 # When -Path points to a directory, PowerShell's -Include filter matches against
 # the directory name itself and never reaches the files inside it.
 # Appending \* makes -Include apply to the directory's contents as expected.
-$audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac -File | Where-Object {
+$audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac, *.mp4, *.mkv -File | Where-Object {
         $_.Name -notmatch "^(WhisperDesktop|FFmpeg|temp)"
     })
 
@@ -51,7 +51,10 @@ elseif ($selection -match "^\d+$") {
         Write-Host "Playing: $($selectedFile.Name)" -ForegroundColor Green
         Write-Host "Window will close when audio ends." -ForegroundColor Yellow
         Write-Host ""
-        & "$ffplayPath" -nodisp -autoexit -hide_banner -loglevel warning "$($selectedFile.FullName)"
+        $isVideo = $selectedFile.Extension -match '^\.(mp4|mkv)$'
+        $ffplayArgs = @("-autoexit", "-hide_banner", "-loglevel", "warning")
+        if (-not $isVideo) { $ffplayArgs += "-nodisp" }
+        & "$ffplayPath" @ffplayArgs "$($selectedFile.FullName)"
     }
     else {
         Write-Host "Invalid index."; Read-Host

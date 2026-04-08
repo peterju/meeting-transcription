@@ -14,7 +14,7 @@ chcp 65001 | Out-Null
 [Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
-$audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac -File | Where-Object {
+$audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac, *.mp4, *.mkv -File | Where-Object {
     $_.Name -notmatch "_norm\." -and $_.Name -notmatch "^(WhisperDesktop|FFmpeg|temp)"
 })
 
@@ -34,7 +34,7 @@ Write-Host ""
 # Show volumedetect stats for each file
 for ($i = 0; $i -lt $audioFiles.Count; $i++) {
     $f = $audioFiles[$i]
-    $vd = & "$ffmpegPath" -hide_banner -i $f.FullName -af "volumedetect" -f null nul 2>&1
+    $vd = & "$ffmpegPath" -hide_banner -i $f.FullName -vn -af "volumedetect" -f null nul 2>&1
     $mean = ($vd | Where-Object { $_ -match "mean_volume:\s*([-\d.]+)" } | ForEach-Object { $Matches[1] }) | Select-Object -First 1
     $max  = ($vd | Where-Object { $_ -match "max_volume:\s*([-\d.]+)" }  | ForEach-Object { $Matches[1] }) | Select-Object -First 1
     Write-Host "  [$($i+1)] $($f.Name)" -ForegroundColor White
@@ -60,7 +60,7 @@ Write-Host ""
 
 # Pass 1: analyze loudness and collect measured values
 Write-Host "Pass 1: Analyzing loudness..." -ForegroundColor Cyan
-$pass1 = & "$ffmpegPath" -hide_banner -i $selectedFile.FullName `
+$pass1 = & "$ffmpegPath" -hide_banner -vn -i $selectedFile.FullName `
     -af "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json" -f null nul 2>&1
 
 # Extract JSON block from pass1 output
@@ -102,7 +102,15 @@ Write-Host "Pass 2: Applying normalization..." -ForegroundColor Cyan
 $af2 = "loudnorm=I=-16:TP=-1.5:LRA=11" +
        ":measured_I=${measI}:measured_TP=${measTP}" +
        ":measured_LRA=${measLRA}:measured_thresh=${measThresh}:linear=true"
-& "$ffmpegPath" -y -i $selectedFile.FullName -af $af2 $outputPath 2>&1 | Out-Null
+$isVideo = $selectedFile.Extension -match '^\.(mp4|mkv)$'
+if ($isVideo) {
+    # Copy video stream, re-encode audio with loudnorm
+    & "$ffmpegPath" -y -i $selectedFile.FullName `
+        -map "0:v" -c:v copy -map "0:a" -af $af2 -c:a aac `
+        $outputPath 2>&1 | Out-Null
+} else {
+    & "$ffmpegPath" -y -i $selectedFile.FullName -af $af2 $outputPath 2>&1 | Out-Null
+}
 
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $outputPath)) {
     Write-Host "Error: Normalization failed." -ForegroundColor Red

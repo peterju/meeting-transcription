@@ -59,7 +59,7 @@ Write-Host "Searching for audio files..." -ForegroundColor Gray
 # When -Path points to a directory, PowerShell's -Include filter matches against
 # the directory name itself and never reaches the files inside it.
 # Appending \* makes -Include apply to the directory's contents as expected.
-$audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac, *.mp4 -File | Where-Object {
+$audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac, *.mp4, *.mkv -File | Where-Object {
         $_.Name -notmatch "^(WhisperDesktop|FFmpeg|temp)"
     })
 
@@ -115,18 +115,53 @@ foreach ($file in $filesToProcess) {
         }
     }
 
-    # Preprocess: trim leading/trailing silence and normalize loudness (loudnorm -16 LUFS).
-    # Creates a temporary 16kHz mono WAV. Falls back to original file if FFmpeg fails.
+    # Preprocess: detect leading/trailing silence via silencedetect, then apply
+    # time-offset seek (-ss/-to) so internal pauses are preserved, followed by
+    # loudnorm -16 LUFS. Creates a temporary 16kHz mono WAV.
+    # Falls back to original file if FFmpeg fails.
     $prepFile = $null
     $inputForWhisper = $file.FullName
     if (Test-Path $ffmpegPath) {
         $prepWav = Join-Path (Split-Path $file.FullName -Parent) `
         ([System.IO.Path]::GetFileNameWithoutExtension($file.Name) + "_prep.wav")
-        $afPrep = "silenceremove=start_periods=1:start_silence=0.3:start_threshold=-50dB" +
-        ":stop_periods=-1:stop_silence=0.5:stop_threshold=-50dB" +
-        ",loudnorm=I=-16:TP=-1.5:LRA=11"
-        Write-Host "  Preprocessing: trim silence + loudnorm..." -ForegroundColor Gray
-        & "$ffmpegPath" -y -i $file.FullName -vn -af $afPrep -ar 16000 -ac 1 $prepWav 2>&1 | Out-Null
+
+        # --- Silence detection pass ---
+        $silenceLog = & "$ffmpegPath" -hide_banner -i $file.FullName `
+            -af "silencedetect=noise=-50dB:duration=0.3" -f null nul 2>&1
+        $ssMatches = [System.Collections.Generic.List[double]]::new()
+        $seMatches = [System.Collections.Generic.List[double]]::new()
+        foreach ($line in $silenceLog) {
+            if ($line -match 'silence_start:\s*([\d.]+)') { $ssMatches.Add([double]$Matches[1]) }
+            if ($line -match 'silence_end:\s*([\d.]+)') { $seMatches.Add([double]$Matches[1]) }
+        }
+        # Leading silence: first silence_start at/near 0 -> audio begins at first silence_end
+        $audioStart = 0.0
+        if ($ssMatches.Count -gt 0 -and $ssMatches[0] -lt 0.5 -and $seMatches.Count -gt 0) {
+            $audioStart = $seMatches[0]
+        }
+        # Trailing silence: last silence_start has no matching silence_end (extends to EOF)
+        $audioEnd = $null
+        if ($ssMatches.Count -gt $seMatches.Count) {
+            $audioEnd = $ssMatches[$ssMatches.Count - 1]
+        }
+
+        # --- Build seek args and status message ---
+        $seekArgs = @()
+        if ($audioStart -gt 0.5) { $seekArgs += @("-ss", $audioStart.ToString("F3")) }
+        if ($null -ne $audioEnd -and $audioEnd -gt ($audioStart + 1.0)) {
+            $seekArgs += @("-to", $audioEnd.ToString("F3"))
+        }
+        $rangeMsg = if ($seekArgs.Count -gt 0) {
+            $startLabel = $audioStart.ToString("F1") + "s"
+            $endLabel = if ($null -ne $audioEnd) { " - " + $audioEnd.ToString("F1") + "s" } else { "" }
+            "offset $startLabel$endLabel"
+        }
+        else { "no edge silence detected" }
+        Write-Host "  Preprocessing: $rangeMsg + loudnorm..." -ForegroundColor Gray
+
+        # --- Encode: seek -> decode -> loudnorm -> 16kHz mono WAV ---
+        & "$ffmpegPath" @seekArgs -y -i $file.FullName -vn `
+            -af "loudnorm=I=-16:TP=-1.5:LRA=11" -ar 16000 -ac 1 $prepWav 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0 -and (Test-Path $prepWav)) {
             $prepFile = $prepWav
             $inputForWhisper = $prepWav
