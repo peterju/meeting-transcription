@@ -14,49 +14,50 @@
 
 ### 最低需求
 
-| 項目 | 規格 |
-|------|------|
-| 作業系統 | Windows 10/11 (64-bit) |
-| CPU | Intel i5 / AMD Ryzen 5 以上 |
-| RAM | 8 GB 以上 |
+| 項目     | 規格                             |
+| -------- | -------------------------------- |
+| 作業系統 | Windows 10/11 (64-bit)           |
+| CPU      | Intel i5 / AMD Ryzen 5 以上      |
+| RAM      | 8 GB 以上                        |
 | 硬碟空間 | 2 GB（含 FFmpeg + Whisper 模型） |
-| 音訊輸入 | 內建麥克風 或 外接 USB 麥克風 |
+| 音訊輸入 | 內建麥克風 或 外接 USB 麥克風    |
 
 ### 建議配備
 
-| 項目 | 規格 | 說明 |
-|------|------|------|
-| CPU | Intel i7 / AMD Ryzen 7 以上 | Whisper 轉錄速度更快 |
-| GPU | NVIDIA RTX 系列（可選） | WhisperDesktop 支援 GPU 加速 |
-| RAM | 16 GB 以上 | 長時錄音更穩定 |
+| 項目 | 規格                        | 說明                         |
+| ---- | --------------------------- | ---------------------------- |
+| CPU  | Intel i7 / AMD Ryzen 7 以上 | Whisper 轉錄速度更快         |
+| GPU  | NVIDIA RTX 系列（可選）     | WhisperDesktop 支援 GPU 加速 |
+| RAM  | 16 GB 以上                  | 長時錄音更穩定               |
 
 ### 無線 Mic 選購建議
 
 如果你需要移動錄音或多人訪談，建議搭配無線麥克風：
 
-| 類型 | 推薦方向 | 預算範圍 |
-|------|----------|----------|
+| 類型             | 推薦方向                                                  | 預算範圍        |
+| ---------------- | --------------------------------------------------------- | --------------- |
 | USB 無線接收器型 | 搜尋「USB Wireless Microphone System」，確認 Windows 免驅 | NT$ 1,000~5,000 |
-| 3.5mm 接頭型 | 確認筆電有 3.5mm Mic-in（非耳機/麥克風共用孔） | NT$ 500~2,000 |
-| 藍牙型 | 確認 Windows 藍牙配對後能識別為「錄音裝置」 | NT$ 800~2,500 |
+| 3.5mm 接頭型     | 確認筆電有 3.5mm Mic-in（非耳機/麥克風共用孔）            | NT$ 500~2,000   |
+| 藍牙型           | 確認 Windows 藍牙配對後能識別為「錄音裝置」               | NT$ 800~2,500   |
 
 > **注意**：購買前請確認商品頁面標明「Windows 相容」或「免驅動」。部分手機專用無線 Mic 可能不支援 Windows。
 
 ## 使用時機
 
-| 場景 | 建議 Profile | 說明 |
-|------|-------------|------|
-| 一般會議 | meeting | 啟用 ARNNDN 降噪，過濾空調/鍵盤聲 |
-| 一對一訪談 | meeting | 清晰人聲，適合後續逐字稿整理 |
-| 課程錄影收音 | meeting | 配合 OBS 等錄影軟體使用 |
-| 合唱團/音樂排練 | choir | 保留較寬頻段，不過度壓縮音質 |
-| 大型講堂 | meeting + 外接 Mic | 建議搭配指向性麥克風 |
+| 場景            | 建議 Profile       | 說明                              |
+| --------------- | ------------------ | --------------------------------- |
+| 一般會議        | meeting            | 啟用 ARNNDN 降噪，過濾空調/鍵盤聲 |
+| 一對一訪談      | meeting            | 清晰人聲，適合後續逐字稿整理      |
+| 課程錄影收音    | meeting            | 配合 OBS 等錄影軟體使用           |
+| 合唱團/音樂排練 | choir              | 保留較寬頻段，不過度壓縮音質      |
+| 大型講堂        | meeting + 外接 Mic | 建議搭配指向性麥克風              |
 
 ## 快速開始
 
 ### 1. 啟動選單
 
 從專案資料夾中：
+
 1. CLI 版：雙擊 `menuCli.cmd`
 2. GUI 版：雙擊 `menuGui.hta`（若系統詢問關聯程式，請選擇 Microsoft HTML 主應用程式 mshta.exe）
 
@@ -99,61 +100,66 @@
 
 開啟 [`settings.json`](settings.json) 可調整：
 
-| 參數 | 說明 | 預設值 |
-|------|------|--------|
-| `audio.format` | 錄音格式（mp3 / m4a） | m4a |
-| `audio.m4aQuality` | M4A 位元率 (kbps) | 192 |
-| `audio.mp3Quality` | MP3 品質 (0-9, 越小越好) | 2 |
-| `audio.defaultDevice` | 上次使用的錄音裝置（自動記錄） | 空（首次需手動選擇） |
-| `record.activeProfile` | 啟用哪組降噪設定 | meeting |
-| `transcription.language` | 轉錄語言 | Chinese |
-| `transcription.prompt` | 給 Whisper 的提示詞 | 會議錄音提示詞 |
+| 參數                     | 說明                           | 預設值               |
+| ------------------------ | ------------------------------ | -------------------- |
+| `audio.format`           | 錄音格式（mp3 / m4a）          | m4a                  |
+| `audio.m4aQuality`       | M4A 位元率 (kbps)              | 192                  |
+| `audio.mp3Quality`       | MP3 品質 (0-9, 越小越好)       | 2                    |
+| `audio.defaultDevice`    | 上次使用的錄音裝置（自動記錄） | 空（首次需手動選擇） |
+| `record.activeProfile`   | 啟用哪組降噪設定               | meeting              |
+| `transcription.language` | 轉錄語言                       | Chinese              |
+| `transcription.prompt`   | 給 Whisper 的提示詞            | 會議錄音提示詞       |
 
 ## 降噪 Profile 說明
 
-| Profile | ARNNDN | Gate | Lowpass | Hipass | 適用場景 |
-|---------|--------|------|---------|--------|----------|
-| meeting | 啟用 | -40dB | 0 | 0 | 一般會議錄音 |
-| choir | 停用 | -50dB | 10000Hz | 70Hz | 合唱團錄音 |
+| Profile | ARNNDN | Gate  | Lowpass | Hipass | 適用場景     |
+| ------- | ------ | ----- | ------- | ------ | ------------ |
+| meeting | 啟用   | -40dB | 0       | 0      | 一般會議錄音 |
+| choir   | 停用   | -50dB | 10000Hz | 70Hz   | 合唱團錄音   |
 
-| 參數 | 說明 |
-|------|------|
-| ARNNDN | AI 降噪濾波器，使用預訓練模型分離人聲與噪音 |
-| Gate | 音閘，低於此閾值的聲音會被靜音（dB） |
-| Lowpass | 低通濾波，只保留低於此頻率的聲音（Hz） |
-| Hipass | 高通濾波，只保留高於此頻率的聲音（Hz） |
+| 參數    | 說明                                        |
+| ------- | ------------------------------------------- |
+| ARNNDN  | AI 降噪濾波器，使用預訓練模型分離人聲與噪音 |
+| Gate    | 音閘，低於此閾值的聲音會被靜音（dB）        |
+| Lowpass | 低通濾波，只保留低於此頻率的聲音（Hz）      |
+| Hipass  | 高通濾波，只保留高於此頻率的聲音（Hz）      |
 
 ## 成本比較
 
-| 方案 | 費用 | 隱私 | 離線 |
-|------|------|------|------|
-| 本工具 | 免費（僅需電費） | 完全離線 | 是 |
-| Notta 付費版 | ~NT$ 300/月 | 需上傳 | 否 |
-| Trint 付費版 | ~NT$ 1,200/月 | 需上傳 | 否 |
-| Google 語音 API | ~NT$ 0.72/分鐘 | 需上傳 | 否 |
+| 方案            | 費用             | 隱私     | 離線 |
+| --------------- | ---------------- | -------- | ---- |
+| 本工具          | 免費（僅需電費） | 完全離線 | 是   |
+| Notta 付費版    | ~NT$ 300/月      | 需上傳   | 否   |
+| Trint 付費版    | ~NT$ 1,200/月    | 需上傳   | 否   |
+| Google 語音 API | ~NT$ 0.72/分鐘   | 需上傳   | 否   |
 
 > 以每月 10 小時錄音計算，使用付費服務約需 NT$ 4,320/月（Google API），本工具**完全免費**。
 
 ## 故障排除
 
 ### 找不到麥克風裝置
+
 1. 確認麥克風已正確連接
 2. 到 Windows 音效設定確認輸入裝置
 3. 部分藍牙 Mic 需在配對後手動設為「預設輸入裝置」
 
 ### 轉錄速度慢
+
 - Whisper medium 模型在 CPU 上約為 **即時 0.5~1x**（10 分鐘音檔約需 10~20 分鐘）
 - 使用 WhisperDesktop（GPU 版）可大幅加速
 
 ### 中文顯示亂碼
+
 - 請從 `menuCli.cmd` 或 `menuGui.hta` 啟動，**不要直接執行 .ps1 檔案**
 - `settings.json` 必須以 **UTF-8** 格式儲存
 
 ### 降噪後聲音變悶
+
 - 檢查 `settings.json` 中 `lowpass` 值是否太低
 - 會議模式預設不啟用 lowpass，若聲音仍悶可嘗試停用 ARNNDN
 
 ### 編碼相關錯誤
+
 1. 本專案的 `.cmd` 腳本可使用中文、Big5 編碼與 CRLF 換行。
 2. 本專案的 `.ps1` 腳本均保持純英文註解、UTF-8 編碼與 CRLF 換行。
 3. [`settings.json`](settings.json) 必須以 **UTF-8** 格式儲存。
@@ -173,6 +179,8 @@
 ├── step6_manage-files.ps1             # 音訊檔案管理（列出/刪除/重新命名）
 ├── step7_volume-adjust.ps1            # 音量分析與增益調整
 ├── README.md                           # 專案說明
+├── AGENTS.md                           # AI Agent 專案規則（供 Copilot/Codex 等讀取）
+├── doc/                                # 開發參考文件
 ├── FFmpeg/                             # FFmpeg 工具目錄 (含 bd.rnnn 模型)
 └── WhisperDesktop/                     # Whisper 工具與模型目錄
 ```

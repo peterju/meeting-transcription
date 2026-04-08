@@ -1,4 +1,4 @@
-# step4_transcribe-audio.ps1
+# step5_transcribe-audio.ps1
 # Audio transcription using WhisperPS
 
 # Maintenance: This file uses English comments to avoid PowerShell 5.1 parser errors.
@@ -43,10 +43,12 @@ $userModulesPath = Join-Path $env:USERPROFILE "Documents\WindowsPowerShell\Modul
 $whisperPSModulePath = Join-Path $userModulesPath "WhisperPS"
 if (Test-Path $whisperPSModulePath) {
     Import-Module $whisperPSModulePath -DisableNameChecking -ErrorAction Stop
-} else {
+}
+else {
     try {
         Import-Module WhisperPS -DisableNameChecking -ErrorAction Stop
-    } catch {
+    }
+    catch {
         Write-Host "Error: WhisperPS module not found." -ForegroundColor Red
         Write-Host "Please run Step 1 to install the module." -ForegroundColor Yellow
         Read-Host; exit 1
@@ -58,7 +60,8 @@ Write-Host "Loading model (please wait)..." -ForegroundColor Cyan
 try {
     $model = Import-WhisperModel "$modelPath"
     Write-Host "Model loaded success!" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "Error loading model: $_" -ForegroundColor Red
     Read-Host; exit 1
 }
@@ -71,8 +74,8 @@ Write-Host "Searching for audio files..." -ForegroundColor Gray
 # the directory name itself and never reaches the files inside it.
 # Appending \* makes -Include apply to the directory's contents as expected.
 $audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac -File | Where-Object {
-    $_.Name -notmatch "^(WhisperDesktop|FFmpeg|temp)"
-})
+        $_.Name -notmatch "^(WhisperDesktop|FFmpeg|temp)"
+    })
 
 if ($audioFiles.Count -eq 0) {
     Write-Host "No audio files found." -ForegroundColor Yellow
@@ -80,7 +83,7 @@ if ($audioFiles.Count -eq 0) {
 }
 
 Write-Host "Found $($audioFiles.Count) file(s):" -ForegroundColor Cyan
-for ($i=0; $i -lt $audioFiles.Count; $i++) {
+for ($i = 0; $i -lt $audioFiles.Count; $i++) {
     Write-Host "  [$($i+1)] $($audioFiles[$i].Name)"
 }
 Write-Host "  [Enter] Quit" -ForegroundColor Yellow
@@ -95,7 +98,8 @@ elseif ($selection -match "^\d+$") {
     $index = [int]$selection - 1
     if ($index -ge 0 -and $index -lt $audioFiles.Count) { $filesToProcess = @($audioFiles[$index]) }
     else { Write-Host "Invalid index."; Read-Host; exit 1 }
-} else { Write-Host "Invalid input."; Read-Host; exit 1 }
+}
+else { Write-Host "Invalid input."; Read-Host; exit 1 }
 
 # Process
 Write-Host ""
@@ -144,7 +148,8 @@ foreach ($file in $filesToProcess) {
         $srtPath = [System.IO.Path]::ChangeExtension($file.FullName, ".srt")
         $result | Export-SubRip -Path "$srtPath"
         Write-Host "  Saved SRT: $(Split-Path $srtPath -Leaf)" -ForegroundColor Green
-    } catch {
+    }
+    catch {
         Write-Host "  Error transcribing $($file.Name): $_" -ForegroundColor Red
     }
     Write-Host ""
