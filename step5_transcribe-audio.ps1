@@ -1,5 +1,5 @@
 # step5_transcribe-audio.ps1
-# Audio transcription using WhisperPS
+# Audio transcription using Whisper CLI (main.exe)
 
 # Maintenance: This file uses English comments to avoid PowerShell 5.1 parser errors.
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
@@ -19,7 +19,7 @@ $settings = $jsonStr | ConvertFrom-Json
 $transConfig = $settings.transcription
 
 $whisperDir = Join-Path $scriptDir "WhisperDesktop"
-$whisperExePath = Join-Path $whisperDir "WhisperDesktop.exe"
+$mainExePath = Join-Path $whisperDir "main.exe"
 $modelPath = Join-Path $whisperDir "ggml-medium.bin"
 
 Write-Host "======================================="
@@ -27,66 +27,30 @@ Write-Host "  Step 5: Audio Transcription (Whisper)"
 Write-Host "======================================="
 Write-Host ""
 
-if (-not (Test-Path "$whisperExePath")) {
-    Write-Host "Error: WhisperDesktop.exe not found. Please run Step 1." -ForegroundColor Red
+if (-not (Test-Path $mainExePath)) {
+    Write-Host "Error: main.exe not found. Please run Step 1." -ForegroundColor Red
     Read-Host "Press Enter to exit"; exit 1
 }
 
-if (-not (Test-Path "$modelPath")) {
+if (-not (Test-Path $modelPath)) {
     Write-Host "Error: Model file not found. Please run Step 1." -ForegroundColor Red
     Read-Host "Press Enter to exit"; exit 1
 }
 
-# Load Module
-Write-Host "Loading WhisperPS module..." -ForegroundColor Gray
-$userModulesPath = Join-Path $env:USERPROFILE "Documents\WindowsPowerShell\Modules"
-$whisperPSModulePath = Join-Path $userModulesPath "WhisperPS"
-if (Test-Path $whisperPSModulePath) {
-    Import-Module $whisperPSModulePath -DisableNameChecking -ErrorAction Stop
+# Map WhisperPS-style language names to whisper CLI language codes
+$langMap = @{
+    "Chinese"    = "zh"
+    "Japanese"   = "ja"
+    "Korean"     = "ko"
+    "English"    = "en"
+    "French"     = "fr"
+    "German"     = "de"
+    "Spanish"    = "es"
+    "Russian"    = "ru"
+    "Portuguese" = "pt"
+    "Italian"    = "it"
 }
-else {
-    try {
-        Import-Module WhisperPS -DisableNameChecking -ErrorAction Stop
-    }
-    catch {
-        Write-Host "Error: WhisperPS module not found." -ForegroundColor Red
-        Write-Host "Please run Step 1 to install the module." -ForegroundColor Yellow
-        Read-Host; exit 1
-    }
-}
-
-# FIX: Export-SubRip in WhisperPS v1.12 has a known bug where timestamps are omitted.
-# This function manually formats segments using the sSegment.time.begin / .end TimeSpan fields.
-function Export-Srt {
-    param(
-        [Parameter(Mandatory)][object]$TranscribeResult,
-        [Parameter(Mandatory)][string]$Path
-    )
-    function Format-SrtTime([TimeSpan]$ts) {
-        return "{0:D2}:{1:D2}:{2:D2},{3:D3}" -f $ts.Hours, $ts.Minutes, $ts.Seconds, $ts.Milliseconds
-    }
-    $lines = [System.Collections.Generic.List[string]]::new()
-    $index = 1
-    foreach ($seg in $TranscribeResult.segments) {
-        $lines.Add($index.ToString())
-        $lines.Add("$(Format-SrtTime $seg.time.begin) --> $(Format-SrtTime $seg.time.end)")
-        $lines.Add($seg.text.Trim())
-        $lines.Add("")
-        $index++
-    }
-    [System.IO.File]::WriteAllLines($Path, $lines, [System.Text.UTF8Encoding]::new($false))
-}
-
-# Load Model
-Write-Host "Loading model (please wait)..." -ForegroundColor Cyan
-try {
-    $model = Import-WhisperModel "$modelPath"
-    Write-Host "Model loaded success!" -ForegroundColor Green
-}
-catch {
-    Write-Host "Error loading model: $_" -ForegroundColor Red
-    Read-Host; exit 1
-}
+$langCode = if ($langMap.ContainsKey($transConfig.language)) { $langMap[$transConfig.language] } else { $transConfig.language }
 
 # Search files
 Write-Host ""
@@ -95,7 +59,7 @@ Write-Host "Searching for audio files..." -ForegroundColor Gray
 # When -Path points to a directory, PowerShell's -Include filter matches against
 # the directory name itself and never reaches the files inside it.
 # Appending \* makes -Include apply to the directory's contents as expected.
-$audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac -File | Where-Object {
+$audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac, *.mp4 -File | Where-Object {
         $_.Name -notmatch "^(WhisperDesktop|FFmpeg|temp)"
     })
 
@@ -154,25 +118,40 @@ foreach ($file in $filesToProcess) {
     Write-Host "  Transcribing... (this may take a while)" -ForegroundColor Cyan
     $startTime = Get-Date
 
-    try {
-        $result = Transcribe-File -model $model -path "$($file.FullName)" -language $transConfig.language -prompt $transConfig.prompt
+    # main.exe writes output files alongside the input file (PathCchRenameExtension).
+    # -otxt: <name>.txt  -osrt: <name>.srt  -nc: suppress ANSI color codes
+    $cmdArgs = @(
+        "-m", $modelPath,
+        "-l", $langCode,
+        "-otxt", "-osrt",
+        "-nc",
+        "--prompt", $transConfig.prompt,
+        "-f", $file.FullName
+    )
+    $cliOutput = & $mainExePath @cmdArgs 2>&1
+    $cliExit = $LASTEXITCODE
 
-        $elapsed = (Get-Date) - $startTime
-        $elapsedStr = "{0:N0} min {1:N0} sec" -f $elapsed.TotalMinutes, $elapsed.Seconds
+    $elapsed = (Get-Date) - $startTime
+    $elapsedStr = "{0:N0} min {1:N0} sec" -f $elapsed.TotalMinutes, $elapsed.Seconds
 
+    if ($cliExit -ne 0) {
+        Write-Host ""
+        Write-Host "  Transcription failed (exit $cliExit):" -ForegroundColor Red
+        $cliOutput | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+    }
+    else {
         Write-Host ""
         Write-Host "  Completed in $elapsedStr" -ForegroundColor Green
 
         $txtPath = [System.IO.Path]::ChangeExtension($file.FullName, ".txt")
-        $result | Export-Text -Path "$txtPath"
-        Write-Host "  Saved TXT: $(Split-Path $txtPath -Leaf)" -ForegroundColor Green
-
         $srtPath = [System.IO.Path]::ChangeExtension($file.FullName, ".srt")
-        Export-Srt -TranscribeResult $result -Path $srtPath
-        Write-Host "  Saved SRT: $(Split-Path $srtPath -Leaf)" -ForegroundColor Green
-    }
-    catch {
-        Write-Host "  Error transcribing $($file.Name): $_" -ForegroundColor Red
+
+        if (Test-Path $txtPath) {
+            Write-Host "  Saved TXT: $(Split-Path $txtPath -Leaf)" -ForegroundColor Green
+        }
+        if (Test-Path $srtPath) {
+            Write-Host "  Saved SRT: $(Split-Path $srtPath -Leaf)" -ForegroundColor Green
+        }
     }
     Write-Host ""
 }

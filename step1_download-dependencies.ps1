@@ -42,17 +42,15 @@ function Test-DownloadNeeded {
 
 $needsFFmpeg = Test-DownloadNeeded (Join-Path $ffmpegDir "ffmpeg.exe") "FFmpeg"
 $needsWhisperDesktop = Test-DownloadNeeded (Join-Path $whisperDir "WhisperDesktop.exe") "WhisperDesktop"
+$needsWhisperCli = Test-DownloadNeeded (Join-Path $whisperDir "main.exe") "Whisper CLI (main.exe)"
 $modelPath = Join-Path $whisperDir "ggml-medium.bin"
 $needsModel = Test-DownloadNeeded $modelPath "Whisper Model"
-$modulesDir = Join-Path $env:USERPROFILE "Documents\WindowsPowerShell\Modules"
-$whisperPSDir = Join-Path $modulesDir "WhisperPS"
-$needsWhisperPS = Test-DownloadNeeded $whisperPSDir "WhisperPS Module"
 
 $arnndnModelName = "bd.rnnn"
 $arnndnPath = Join-Path $ffmpegDir $arnndnModelName
 $needsArnndn = Test-DownloadNeeded $arnndnPath "ARNNDN Model ($arnndnModelName)"
 
-if (-not ($needsFFmpeg -or $needsWhisperDesktop -or $needsModel -or $needsWhisperPS -or $needsArnndn)) {
+if (-not ($needsFFmpeg -or $needsWhisperDesktop -or $needsWhisperCli -or $needsModel -or $needsArnndn)) {
     Write-Host "All files ready. Done." -ForegroundColor Green
     Write-Host ""; Read-Host "Press Enter to exit"; exit 0
 }
@@ -75,7 +73,8 @@ if ($needsFFmpeg) {
         # Build GitHub URL based on version and base URL in settings.json
         # Format: base_url + version + filename
         $ffmpegUrl = "$($settings.urls.ffmpegReleaseBase)$latestVer/ffmpeg-$latestVer-essentials_build.zip"
-    } catch {
+    }
+    catch {
         Write-Host "Failed to resolve version, using fallback URL..." -ForegroundColor Yellow
         $ffmpegUrl = $settings.urls.ffmpegFallback
     }
@@ -102,7 +101,8 @@ if ($needsFFmpeg) {
         if (Test-Path "$srcFfmpeg") { Copy-Item "$srcFfmpeg" (Join-Path $ffmpegDir "ffmpeg.exe") -Force }
         if (Test-Path "$srcFfplay") { Copy-Item "$srcFfplay" (Join-Path $ffmpegDir "ffplay.exe") -Force }
         Write-Host "FFmpeg/FFplay installed" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "Error: No bin folder in zip" -ForegroundColor Red
         Read-Host "Press Enter to exit"; exit 1
     }
@@ -122,6 +122,28 @@ if ($needsWhisperDesktop) {
     Write-Host "WhisperDesktop installed" -ForegroundColor Green
 }
 
+# [2.5] Whisper CLI (main.exe) - required by step5 for correct SRT timestamps
+if ($needsWhisperCli) {
+    Write-Host "[2.5] Downloading Whisper CLI (main.exe)..."
+    $whisperCliZip = Join-Path $downloadDir "whisper_cli.zip"
+    curl.exe -L -o "$whisperCliZip" "$($settings.urls.whisperCli)"
+    if ($LASTEXITCODE -ne 0) { Write-Host "Download failed"; Read-Host; exit 1 }
+
+    $cliTemp = Join-Path $downloadDir "cli_temp"
+    Expand-Archive -Path "$whisperCliZip" -DestinationPath "$cliTemp" -Force
+    if (-not (Test-Path "$whisperDir")) { New-Item -ItemType Directory -Path "$whisperDir" -Force | Out-Null }
+    # Only copy main.exe; Whisper.dll is already provided by WhisperDesktop
+    $mainExeSrc = Join-Path $cliTemp "main.exe"
+    if (Test-Path $mainExeSrc) {
+        Copy-Item $mainExeSrc (Join-Path $whisperDir "main.exe") -Force
+        Write-Host "Whisper CLI (main.exe) installed" -ForegroundColor Green
+    }
+    else {
+        Write-Host "Error: main.exe not found in cli.zip" -ForegroundColor Red
+        Read-Host; exit 1
+    }
+}
+
 # [3/4] Whisper model
 if ($needsModel) {
     Write-Host "[3/4] Downloading Whisper model..."
@@ -130,22 +152,7 @@ if ($needsModel) {
     Write-Host "Model downloaded" -ForegroundColor Green
 }
 
-# [4/4] WhisperPS module
-if ($needsWhisperPS) {
-    Write-Host "[4/4] Downloading WhisperPS module..."
-    $whisperPSZip = Join-Path $downloadDir "WhisperPS.zip"
-    curl.exe -L -o "$whisperPSZip" "$($settings.urls.whisperPS)"
-    if ($LASTEXITCODE -ne 0) { Write-Host "Download failed"; Read-Host; exit 1 }
-
-    $whisperPSTemp = Join-Path $downloadDir "WhisperPS_temp"
-    Expand-Archive -Path "$whisperPSZip" -DestinationPath "$whisperPSTemp" -Force
-    if (-not (Test-Path "$modulesDir")) { New-Item -ItemType Directory -Path "$modulesDir" -Force | Out-Null }
-    if (Test-Path "$whisperPSDir") { Remove-Item "$whisperPSDir" -Recurse -Force }
-    Copy-Item "$whisperPSTemp\WhisperPS" "$modulesDir" -Recurse -Force
-    Write-Host "WhisperPS module installed" -ForegroundColor Green
-}
-
-# [5/5] ARNNDN model
+# [4/4] ARNNDN model
 if ($needsArnndn) {
     Write-Host "[5/5] Downloading ARNNDN model ($arnndnModelName)..."
     $arnndnUrl = $settings.urls.arnndnModel

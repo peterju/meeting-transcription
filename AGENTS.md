@@ -28,7 +28,7 @@ Windows 離線工具，用 FFmpeg + WhisperDesktop 完成「錄音 → 降噪 �
 
 - 音訊檔案：根目錄（`*.mp3`, `*.m4a` 等）
 - FFmpeg 工具：`FFmpeg/ffmpeg.exe`、`FFmpeg/ffplay.exe`、`FFmpeg/bd.rnnn`
-- Whisper 工具：`WhisperDesktop/WhisperDesktop.exe`、`WhisperDesktop/ggml-medium.bin`
+- Whisper 工具：`WhisperDesktop/WhisperDesktop.exe`、`WhisperDesktop/main.exe`（CLI，step5 用）、`WhisperDesktop/ggml-medium.bin`
 - 中央設定：`settings.json`（每支腳本啟動時讀取，UTF-8）
 
 ## 檔案編碼與語言規則
