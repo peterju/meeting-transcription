@@ -86,7 +86,7 @@
             background-color: #252542;
             border: 1px solid #38385e;
             border-left-width: 5px;
-            padding: 13px 16px;
+            padding: 8px 16px;
             margin-bottom: 9px;
             cursor: pointer;
             text-align: left;
@@ -251,7 +251,9 @@
                     </tr></table>
                 </button>
 
-                <button class="step-btn" style="border-left-color:#c084fc;"
+                <div style="border-top:1px solid #2e3a50;margin:6px 0 10px;"></div>
+
+                <button class="step-btn" data-bg="#1e2838" style="border-left-color:#c084fc; background-color:#1e2838;"
                     onclick="runStep(5)"
                     onmouseover="hoverOn(this,'#c084fc')" onmouseout="hoverOff(this)">
                     <table class="step-inner"><tr>
@@ -264,7 +266,7 @@
                     </tr></table>
                 </button>
 
-                <button class="step-btn" style="border-left-color:#38bdf8;"
+                <button class="step-btn" data-bg="#1e2838" style="border-left-color:#38bdf8; background-color:#1e2838;"
                     onclick="runStep(6)"
                     onmouseover="hoverOn(this,'#38bdf8')" onmouseout="hoverOff(this)">
                     <table class="step-inner"><tr>
@@ -277,7 +279,7 @@
                     </tr></table>
                 </button>
 
-                <button class="step-btn" style="border-left-color:#fbbf24;"
+                <button class="step-btn" data-bg="#1e2838" style="border-left-color:#fbbf24; background-color:#1e2838;"
                     onclick="runStep(7)"
                     onmouseover="hoverOn(this,'#fbbf24')" onmouseout="hoverOff(this)">
                     <table class="step-inner"><tr>
@@ -290,7 +292,7 @@
                     </tr></table>
                 </button>
 
-                <button class="step-btn" style="border-left-color:#64748b; margin-top:8px;"
+                <button class="step-btn" data-bg="#1e2838" style="border-left-color:#64748b; background-color:#1e2838; margin-top:8px;"
                     onclick="openFolder()"
                     onmouseover="hoverOn(this,'#64748b')" onmouseout="hoverOff(this)">
                     <table class="step-inner"><tr>
@@ -416,7 +418,7 @@ function hoverOn(btn, color) {
 }
 
 function hoverOff(btn) {
-    btn.style.backgroundColor = "#252542";
+    btn.style.backgroundColor = btn.getAttribute("data-bg") || "#252542";
     btn.style.borderTopColor = "#38385e";
     btn.style.borderRightColor = "#38385e";
     btn.style.borderBottomColor = "#38385e";
