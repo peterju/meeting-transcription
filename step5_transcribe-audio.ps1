@@ -120,11 +120,12 @@ foreach ($file in $filesToProcess) {
 
     # main.exe writes output files alongside the input file (PathCchRenameExtension).
     # -otxt: <name>.txt  -osrt: <name>.srt  -nc: suppress ANSI color codes
+    # -nt: suppress timestamps in .txt (does not affect .srt, which always has timestamps)
     $cmdArgs = @(
         "-m", $modelPath,
         "-l", $langCode,
         "-otxt", "-osrt",
-        "-nc",
+        "-nt", "-nc",
         "--prompt", $transConfig.prompt,
         "-f", $file.FullName
     )

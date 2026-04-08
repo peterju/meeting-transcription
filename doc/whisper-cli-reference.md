@@ -12,13 +12,13 @@ main.exe -m <model> -l <lang> -f <audio> [options]
 ### step5 實際呼叫方式
 
 ```powershell
-& $mainExePath -m $modelPath -l zh -otxt -osrt -nc --prompt "..." -f "audio.mp4"
+& $mainExePath -m $modelPath -l zh -otxt -osrt -nt -nc --prompt "..." -f "audio.mp4"
 ```
 
 輸出檔案由 `PathCchRenameExtension` 產生，路徑與輸入檔案相同，僅替換副檔名：
 
-- `-otxt` → `audio.txt`（含 BOM 的 UTF-8）
-- `-osrt` → `audio.srt`（含 BOM 的 UTF-8，逗號分隔時間戳）
+- `-otxt` + `-nt` → `audio.txt`（純文字，不含時間戳，UTF-8 with BOM）
+- `-osrt` → `audio.srt`（含正確時間戳，UTF-8 with BOM）
 
 ## 完整參數說明
 
