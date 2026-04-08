@@ -1,5 +1,8 @@
-# step3_denoise-audio.ps1
-# Audio post-processing: apply noise reduction filters
+# uty3_denoise-audio.ps1
+# Audio post-processing: apply noise reduction filters (optional step)
+
+# Maintenance: This file uses English comments to avoid PowerShell 5.1 parser errors.
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 if ([string]::IsNullOrEmpty($scriptDir)) { $scriptDir = "." }
@@ -12,6 +15,7 @@ if (-not (Test-Path "$settingsPath")) {
 
 $jsonStr = [System.IO.File]::ReadAllText($settingsPath, [System.Text.Encoding]::UTF8)
 $settings = $jsonStr | ConvertFrom-Json
+$null = $settings  # TODO: access $settings properties as needed; remove this line when done
 
 $ffmpegPath = Join-Path $scriptDir "FFmpeg\ffmpeg.exe"
 if (-not (Test-Path "$ffmpegPath")) {
@@ -28,7 +32,7 @@ $profiles = $recordConfig.profiles
 $activeProfileName = $recordConfig.activeProfile
 
 Write-Host "========================================"
-Write-Host "  Audio Post-Processing (Noise Reduction)" -ForegroundColor Cyan
+Write-Host "  Utility 3: Noise Reduction (optional)" -ForegroundColor Cyan
 Write-Host "========================================"
 Write-Host ""
 

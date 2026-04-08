@@ -15,6 +15,7 @@ if (-not (Test-Path "$settingsPath")) {
 }
 $jsonStr = [System.IO.File]::ReadAllText($settingsPath, [System.Text.Encoding]::UTF8)
 $settings = $jsonStr | ConvertFrom-Json
+$null = $settings  # TODO: access $settings properties as needed; remove this line when done
 
 # FIX: menuCli.cmd sets 'chcp 950' before launching this script.
 # Override to UTF-8 so console output renders correctly.

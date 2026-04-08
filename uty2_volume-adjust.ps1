@@ -11,12 +11,12 @@ if (-not (Test-Path "$ffmpegPath")) {
 }
 
 chcp 65001 | Out-Null
-[Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 $audioFiles = @(Get-ChildItem -Path "$scriptDir\*" -Include *.mp3, *.wav, *.m4a, *.wma, *.ogg, *.flac, *.mp4, *.mkv -File | Where-Object {
-    $_.Name -notmatch "_norm\." -and $_.Name -notmatch "^(WhisperDesktop|FFmpeg|temp)"
-})
+        $_.Name -notmatch "_norm\." -and $_.Name -notmatch "^(WhisperDesktop|FFmpeg|temp)"
+    })
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Volume Normalization (EBU R128 loudnorm)" -ForegroundColor Cyan
@@ -36,7 +36,7 @@ for ($i = 0; $i -lt $audioFiles.Count; $i++) {
     $f = $audioFiles[$i]
     $vd = & "$ffmpegPath" -hide_banner -i $f.FullName -vn -af "volumedetect" -f null nul 2>&1
     $mean = ($vd | Where-Object { $_ -match "mean_volume:\s*([-\d.]+)" } | ForEach-Object { $Matches[1] }) | Select-Object -First 1
-    $max  = ($vd | Where-Object { $_ -match "max_volume:\s*([-\d.]+)" }  | ForEach-Object { $Matches[1] }) | Select-Object -First 1
+    $max = ($vd | Where-Object { $_ -match "max_volume:\s*([-\d.]+)" }  | ForEach-Object { $Matches[1] }) | Select-Object -First 1
     Write-Host "  [$($i+1)] $($f.Name)" -ForegroundColor White
     Write-Host "       Mean: $mean dB  |  Max: $max dB" -ForegroundColor DarkGray
     Write-Host ""
@@ -78,9 +78,9 @@ if ($jsonLines.Count -eq 0) {
 }
 
 $loud = ($jsonLines -join "`n") | ConvertFrom-Json
-$measI      = $loud.input_i
-$measTP     = $loud.input_tp
-$measLRA    = $loud.input_lra
+$measI = $loud.input_i
+$measTP = $loud.input_tp
+$measLRA = $loud.input_lra
 $measThresh = $loud.input_thresh
 
 $approxGain = [math]::Round(-16.0 - [double]$measI, 1)
@@ -100,15 +100,16 @@ $outputPath = Join-Path $scriptDir $outputName
 # Pass 2: apply normalization using measured values (linear=true for transparent gain)
 Write-Host "Pass 2: Applying normalization..." -ForegroundColor Cyan
 $af2 = "loudnorm=I=-16:TP=-1.5:LRA=11" +
-       ":measured_I=${measI}:measured_TP=${measTP}" +
-       ":measured_LRA=${measLRA}:measured_thresh=${measThresh}:linear=true"
+":measured_I=${measI}:measured_TP=${measTP}" +
+":measured_LRA=${measLRA}:measured_thresh=${measThresh}:linear=true"
 $isVideo = $selectedFile.Extension -match '^\.(mp4|mkv)$'
 if ($isVideo) {
     # Copy video stream, re-encode audio with loudnorm
     & "$ffmpegPath" -y -i $selectedFile.FullName `
         -map "0:v" -c:v copy -map "0:a" -af $af2 -c:a aac `
         $outputPath 2>&1 | Out-Null
-} else {
+}
+else {
     & "$ffmpegPath" -y -i $selectedFile.FullName -af $af2 $outputPath 2>&1 | Out-Null
 }
 
@@ -120,7 +121,7 @@ if ($LASTEXITCODE -ne 0 -or -not (Test-Path $outputPath)) {
 # Verify output
 $vd2 = & "$ffmpegPath" -hide_banner -i $outputPath -af "volumedetect" -f null nul 2>&1
 $newMean = ($vd2 | Where-Object { $_ -match "mean_volume:\s*([-\d.]+)" } | ForEach-Object { $Matches[1] }) | Select-Object -First 1
-$newMax  = ($vd2 | Where-Object { $_ -match "max_volume:\s*([-\d.]+)" }  | ForEach-Object { $Matches[1] }) | Select-Object -First 1
+$newMax = ($vd2 | Where-Object { $_ -match "max_volume:\s*([-\d.]+)" }  | ForEach-Object { $Matches[1] }) | Select-Object -First 1
 
 Write-Host ""
 Write-Host "Saved: $outputName" -ForegroundColor Green

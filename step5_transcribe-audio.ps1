@@ -23,7 +23,7 @@ $mainExePath = Join-Path $whisperDir "main.exe"
 $modelPath = Join-Path $whisperDir "ggml-medium.bin"
 
 Write-Host "======================================="
-Write-Host "  Step 5: Audio Transcription (Whisper)"
+Write-Host "  Step 4: Audio Transcription (Whisper)"
 Write-Host "======================================="
 Write-Host ""
 
@@ -145,23 +145,46 @@ foreach ($file in $filesToProcess) {
             $audioEnd = $ssMatches[$ssMatches.Count - 1]
         }
 
-        # --- Build seek args and status message ---
+        # --- Build seek args ---
         $seekArgs = @()
         if ($audioStart -gt 0.5) { $seekArgs += @("-ss", $audioStart.ToString("F3")) }
         if ($null -ne $audioEnd -and $audioEnd -gt ($audioStart + 1.0)) {
             $seekArgs += @("-to", $audioEnd.ToString("F3"))
         }
-        $rangeMsg = if ($seekArgs.Count -gt 0) {
+        if ($seekArgs.Count -gt 0) {
             $startLabel = $audioStart.ToString("F1") + "s"
             $endLabel = if ($null -ne $audioEnd) { " - " + $audioEnd.ToString("F1") + "s" } else { "" }
-            "offset $startLabel$endLabel"
+            Write-Host "  Preprocessing: edge silence offset $startLabel$endLabel" -ForegroundColor Gray
         }
-        else { "no edge silence detected" }
-        Write-Host "  Preprocessing: $rangeMsg + loudnorm..." -ForegroundColor Gray
 
-        # --- Encode: seek -> decode -> loudnorm -> 16kHz mono WAV ---
+        # --- Two-pass loudnorm (same approach as uty2) ---
+        # Pass 1: measure integrated loudness, true peak, LRA, threshold
+        Write-Host "  Preprocessing: analyzing loudness..." -ForegroundColor Gray
+        $pass1Out = & "$ffmpegPath" -hide_banner @seekArgs -i $file.FullName -vn `
+            -af "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json" -f null nul 2>&1
+        $jsonLines = [System.Collections.Generic.List[string]]::new()
+        $inJson = $false
+        foreach ($ln in $pass1Out) {
+            if ($ln -match "^\s*\{") { $inJson = $true }
+            if ($inJson) { $jsonLines.Add($ln) }
+            if ($ln -match "^\s*\}") { $inJson = $false }
+        }
+        $afPass2 = "loudnorm=I=-16:TP=-1.5:LRA=11"
+        if ($jsonLines.Count -gt 0) {
+            $loud = ($jsonLines -join "`n") | ConvertFrom-Json
+            $afPass2 = "loudnorm=I=-16:TP=-1.5:LRA=11" +
+            ":measured_I=$($loud.input_i):measured_TP=$($loud.input_tp)" +
+            ":measured_LRA=$($loud.input_lra):measured_thresh=$($loud.input_thresh):linear=true"
+            $approxGain = [math]::Round(-16.0 - [double]$loud.input_i, 1)
+            Write-Host "  Preprocessing: loudnorm pass2 (~${approxGain} dB) -> 16kHz mono WAV..." -ForegroundColor Gray
+        }
+        else {
+            Write-Host "  Preprocessing: loudnorm (single-pass fallback) -> 16kHz mono WAV..." -ForegroundColor Gray
+        }
+
+        # Pass 2: apply linear gain + encode to 16kHz mono WAV for Whisper
         & "$ffmpegPath" @seekArgs -y -i $file.FullName -vn `
-            -af "loudnorm=I=-16:TP=-1.5:LRA=11" -ar 16000 -ac 1 $prepWav 2>&1 | Out-Null
+            -af $afPass2 -ar 16000 -ac 1 $prepWav 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0 -and (Test-Path $prepWav)) {
             $prepFile = $prepWav
             $inputForWhisper = $prepWav

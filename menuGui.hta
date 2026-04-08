@@ -229,19 +229,6 @@
                     onclick="runStep(3)"
                     onmouseover="hoverOn(this,'#fbbf24')" onmouseout="hoverOff(this)">
                     <table class="step-inner"><tr>
-                        <td class="step-icon-cell"><div class="step-icon">&#128266;</div></td>
-                        <td class="step-text-cell">
-                            <div class="step-name">後製降噪</div>
-                            <div class="step-desc">濾除環境雜音</div>
-                        </td>
-                        <td class="step-arrow-cell">&rsaquo;</td>
-                    </tr></table>
-                </button>
-
-                <button class="step-btn" style="border-left-color:#f87171;"
-                    onclick="runStep(4)"
-                    onmouseover="hoverOn(this,'#f87171')" onmouseout="hoverOff(this)">
-                    <table class="step-inner"><tr>
                         <td class="step-icon-cell"><div class="step-icon">&#9654;</div></td>
                         <td class="step-text-cell">
                             <div class="step-name">播放錄音</div>
@@ -251,9 +238,9 @@
                     </tr></table>
                 </button>
 
-                <button class="step-btn" style="border-left-color:#c084fc;"
-                    onclick="runStep(5)"
-                    onmouseover="hoverOn(this,'#c084fc')" onmouseout="hoverOff(this)">
+                <button class="step-btn" style="border-left-color:#f87171;"
+                    onclick="runStep(4)"
+                    onmouseover="hoverOn(this,'#f87171')" onmouseout="hoverOff(this)">
                     <table class="step-inner"><tr>
                         <td class="step-icon-cell"><div class="step-icon">&#128221;</div></td>
                         <td class="step-text-cell">
@@ -264,9 +251,9 @@
                     </tr></table>
                 </button>
 
-                <button class="step-btn" style="border-left-color:#38bdf8;"
-                    onclick="runStep(6)"
-                    onmouseover="hoverOn(this,'#38bdf8')" onmouseout="hoverOff(this)">
+                <button class="step-btn" style="border-left-color:#c084fc;"
+                    onclick="runStep(5)"
+                    onmouseover="hoverOn(this,'#c084fc')" onmouseout="hoverOff(this)">
                     <table class="step-inner"><tr>
                         <td class="step-icon-cell"><div class="step-icon">&#128196;</div></td>
                         <td class="step-text-cell">
@@ -277,14 +264,27 @@
                     </tr></table>
                 </button>
 
+                <button class="step-btn" style="border-left-color:#38bdf8;"
+                    onclick="runStep(6)"
+                    onmouseover="hoverOn(this,'#38bdf8')" onmouseout="hoverOff(this)">
+                    <table class="step-inner"><tr>
+                        <td class="step-icon-cell"><div class="step-icon">&#128264;</div></td>
+                        <td class="step-text-cell">
+                            <div class="step-name">音量正規化</div>
+                            <div class="step-desc">EBU R128 兩段式音量正規化</div>
+                        </td>
+                        <td class="step-arrow-cell">&rsaquo;</td>
+                    </tr></table>
+                </button>
+
                 <button class="step-btn" style="border-left-color:#fbbf24;"
                     onclick="runStep(7)"
                     onmouseover="hoverOn(this,'#fbbf24')" onmouseout="hoverOff(this)">
                     <table class="step-inner"><tr>
-                        <td class="step-icon-cell"><div class="step-icon">&#128264;</div></td>
+                        <td class="step-icon-cell"><div class="step-icon">&#128266;</div></td>
                         <td class="step-text-cell">
-                            <div class="step-name">音量調整</div>
-                            <div class="step-desc">EBU R128 兩段式音量正規化</div>
+                            <div class="step-name">後製降噪</div>
+                            <div class="step-desc">濾除環境雜音（可選）</div>
                         </td>
                         <td class="step-arrow-cell">&rsaquo;</td>
                     </tr></table>
@@ -368,24 +368,25 @@ function runStep(step) {
     var scripts = {
         1: "step1_download-dependencies.ps1",
         2: "step2_record-audio.ps1",
-        3: "step3_denoise-audio.ps1",
-        4: "step4_play-audio.ps1",
-        5: "step5_transcribe-audio.ps1",
-        6: "uty1_manage-files.ps1",
-        7: "uty2_volume-adjust.ps1"
+        3: "step4_play-audio.ps1",
+        4: "step5_transcribe-audio.ps1",
+        5: "uty1_manage-files.ps1",
+        6: "uty2_volume-adjust.ps1",
+        7: "uty3_denoise-audio.ps1"
     };
     var names = {
         1: "下載工具",
         2: "開始錄音",
-        3: "後製降噪",
-        4: "播放錄音",
-        5: "語音轉文字",
-        6: "檔案管理",
-        7: "音量正規化"
+        3: "播放錄音",
+        4: "語音轉文字",
+        5: "檔案管理",
+        6: "音量正規化",
+        7: "後製降噪"
     };
 
+    var stepLabel = (step <= 4) ? "執行步驟 " : "執行工具 ";
     var scriptName = scripts[step];
-    addLine("執行步驟 " + step + " &middot; <b>" + names[step] + "</b>", "c-run");
+    addLine(stepLabel + step + " &middot; <b>" + names[step] + "</b>", "c-run");
 
     try {
         // Use SysNative to access 64-bit PowerShell from 32-bit HTA
