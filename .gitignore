@@ -2,13 +2,16 @@
 WhisperDesktop/
 FFmpeg/
 
-# 錄音輸出
+# 音訊檔案
 *.mp3
 *.wav
 *.m4a
 *.wma
 *.ogg
 *.flac
+
+# 影片檔案
+*.mp4
 
 # 轉文字輸出
 *.txt
