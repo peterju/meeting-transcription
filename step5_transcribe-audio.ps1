@@ -22,9 +22,9 @@ $whisperDir = Join-Path $scriptDir "WhisperDesktop"
 $whisperExePath = Join-Path $whisperDir "WhisperDesktop.exe"
 $modelPath = Join-Path $whisperDir "ggml-medium.bin"
 
-Write-Host "========================================"
-Write-Host "  Step 4: Audio Transcription (Whisper)"
-Write-Host "========================================"
+Write-Host "======================================="
+Write-Host "  Step 5: Audio Transcription (Whisper)"
+Write-Host "======================================="
 Write-Host ""
 
 if (-not (Test-Path "$whisperExePath")) {
@@ -53,6 +53,28 @@ else {
         Write-Host "Please run Step 1 to install the module." -ForegroundColor Yellow
         Read-Host; exit 1
     }
+}
+
+# FIX: Export-SubRip in WhisperPS v1.12 has a known bug where timestamps are omitted.
+# This function manually formats segments using the sSegment.time.begin / .end TimeSpan fields.
+function Export-Srt {
+    param(
+        [Parameter(Mandatory)][object]$TranscribeResult,
+        [Parameter(Mandatory)][string]$Path
+    )
+    function Format-SrtTime([TimeSpan]$ts) {
+        return "{0:D2}:{1:D2}:{2:D2},{3:D3}" -f $ts.Hours, $ts.Minutes, $ts.Seconds, $ts.Milliseconds
+    }
+    $lines = [System.Collections.Generic.List[string]]::new()
+    $index = 1
+    foreach ($seg in $TranscribeResult.segments) {
+        $lines.Add($index.ToString())
+        $lines.Add("$(Format-SrtTime $seg.time.begin) --> $(Format-SrtTime $seg.time.end)")
+        $lines.Add($seg.text.Trim())
+        $lines.Add("")
+        $index++
+    }
+    [System.IO.File]::WriteAllLines($Path, $lines, [System.Text.UTF8Encoding]::new($false))
 }
 
 # Load Model
@@ -146,7 +168,7 @@ foreach ($file in $filesToProcess) {
         Write-Host "  Saved TXT: $(Split-Path $txtPath -Leaf)" -ForegroundColor Green
 
         $srtPath = [System.IO.Path]::ChangeExtension($file.FullName, ".srt")
-        $result | Export-SubRip -Path "$srtPath"
+        Export-Srt -TranscribeResult $result -Path $srtPath
         Write-Host "  Saved SRT: $(Split-Path $srtPath -Leaf)" -ForegroundColor Green
     }
     catch {
