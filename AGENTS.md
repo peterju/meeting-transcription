@@ -22,6 +22,8 @@ Windows 離線工具，用 FFmpeg + WhisperDesktop 完成「錄音 → 降噪 �
 
 > 新增步驟時，請讀取並遵循 [.github/skills/add-step/SKILL.md](.github/skills/add-step/SKILL.md) 的流程。
 
+> `menuGui.hta` 由 `mshta.exe`（強制 32-bit）執行；必須使用 `C:\Windows\SysNative\WindowsPowerShell\v1.0\powershell.exe` 啟動 `.ps1`，才能取得 64-bit PowerShell。`SysNative` 是 WOW64 提供給 32-bit 行程存取真實 64-bit System32 的虛擬路徑，**不可改為 System32**，否則會靜默降回 32-bit PS。
+
 **重要路徑**：
 
 - 音訊檔案：根目錄（`*.mp3`, `*.m4a` 等）
@@ -31,9 +33,11 @@ Windows 離線工具，用 FFmpeg + WhisperDesktop 完成「錄音 → 降噪 �
 
 ## 檔案編碼與語言規則
 
-1. **`.cmd` 腳本**：必須使用**繁體中文**、**Big5 (CP950) 編碼**，以及 **CRLF** 換行。
-2. **`.ps1` 腳本**：必須使用**純英文註解**、**UTF-8 編碼**（無 BOM），以及 **CRLF** 換行。
-3. **`settings.json`**：必須以 **UTF-8** 編碼儲存。
+| 檔案類型        | 編碼                    | 注釋語言                           | 強制規則                                                                |
+| --------------- | ----------------------- | ---------------------------------- | ----------------------------------------------------------------------- |
+| `.cmd`          | Big5 (CP950) + CRLF     | 繁體中文                           | 寫入時必須用 `[IO.File]::WriteAllText(..., Encoding.GetEncoding(950))`  |
+| `.ps1`          | UTF-8 **無 BOM** + CRLF | **純英文**（不可含中文或非 ASCII） | 啟動時必須呼叫 `chcp 65001 \| Out-Null`，覆蓋 CLI 選單設定的 `chcp 950` |
+| `settings.json` | UTF-8                   | —                                  | —                                                                       |
 
 ## Git 提交規範
 
@@ -50,10 +54,3 @@ Windows 離線工具，用 FFmpeg + WhisperDesktop 完成「錄音 → 降噪 �
 | `fd`         | 尋找檔案           |
 | `jq`         | 處理 JSON          |
 | `git` / `gh` | Git 與 GitHub 操作 |
-
-## 注意事項
-
-- 絕對不可在 `.ps1` 檔案的註解中加入中文或非 ASCII 字元。
-- 編輯 `.cmd` 檔時，必須以 Big5 編碼寫入。請使用 PowerShell：`[IO.File]::WriteAllText("path", $content, [System.Text.Encoding]::GetEncoding(950))`
-- CLI 選單（`menuCli.cmd`）在啟動 `.ps1` 腳本前會設定 `chcp 950`；每支 `.ps1` 腳本必須自行覆蓋為 `chcp 65001`，以確保 UTF-8 主控台輸出正確。
-- `menuGui.hta` 由 `mshta.exe`（強制 32-bit）執行；必須使用 `C:\Windows\SysNative\WindowsPowerShell\v1.0\powershell.exe` 啟動 `.ps1`，才能取得 64-bit PowerShell。`SysNative` 是 WOW64 提供給 32-bit 行程存取真實 64-bit System32 的虛擬路徑，**不可改為 System32**，否則會靜默降回 32-bit PS。
