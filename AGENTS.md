@@ -16,7 +16,7 @@ Windows 離線工具，用 FFmpeg + WhisperDesktop 完成「錄音 → 降噪 �
 | `step2_record-audio.ps1`          | 列出 dshow 裝置、錄音、記憶上次裝置                                                             | 根目錄 `{timestamp}.m4a/.mp3` |
 | `step3_play-audio.ps1`            | 用 ffplay 播放選定音訊（支援音訊與影片）                                                        | —                             |
 | `step4_transcribe-audio.ps1`      | silencedetect 圖週 offset 切除首尾靜音 + EBU R128 兩程 loudnorm，再送 `main.exe` CLI 語音轉文字 | `{name}.txt` + `{name}.srt`   |
-| `uty1_manage-files.ps1`           | 依 basename 分組瀏覽媒體與逐字稿，可播放、預覽、刪除整組或刪除單檔                              | —                             |
+| `uty1_manage-files.ps1`           | 依 basename 分組管理媒體與逐字稿；文字檔以 Notepad 開啟，媒體檔以 ffplay 播放，可刪除整組或單檔 | —                             |
 | `uty2_volume-adjust.ps1`          | EBU R128 兩段式 loudnorm 音量分析與正規化                                                       | `{name}_norm.{ext}`           |
 | `uty3_denoise-audio.ps1`          | 依 active profile 套 ARNNDN + gate + lowpass/hipass（可選）                                     | `{name}_denoised.{ext}`       |
 

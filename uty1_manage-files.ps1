@@ -221,30 +221,16 @@ function Show-ItemDetails {
     Write-Host ""
 }
 
-function Show-TextPreview {
+function Open-TextFile {
     param([System.IO.FileInfo]$File)
 
-    Clear-Host
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "  Text Preview" -ForegroundColor Cyan
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "File: $($File.Name)" -ForegroundColor White
-    Write-Host ""
-
     try {
-        $lines = Get-Content -LiteralPath $File.FullName -Encoding UTF8 -TotalCount 20
-        if (-not $lines -or $lines.Count -eq 0) {
-            Write-Host "(File is empty)" -ForegroundColor DarkGray
-        }
-        else {
-            foreach ($line in $lines) {
-                Write-Host $line
-            }
-        }
+        Write-Host ""
+        Write-Host "Opening in Notepad: $($File.Name)" -ForegroundColor Green
+        Start-Process -FilePath "notepad.exe" -ArgumentList $File.FullName
     }
     catch {
-        Write-Host "Unable to read file preview." -ForegroundColor Red
+        Write-Host "Unable to open file in Notepad." -ForegroundColor Red
         Write-Host $_.Exception.Message -ForegroundColor DarkGray
     }
 
@@ -323,22 +309,19 @@ function Invoke-ViewFile {
 
     $extension = $file.Extension.ToLowerInvariant()
     if ($textExtensions -contains $extension) {
-        Show-TextPreview -File $file
+        Open-TextFile -File $file
         return
     }
 
-    Clear-Host
-    Write-Host "========================================" -ForegroundColor Cyan
-    Write-Host "  File Information" -ForegroundColor Cyan
-    Write-Host "========================================" -ForegroundColor Cyan
+    if (-not (Test-Path $ffplayPath)) {
+        Write-Host "ffplay.exe not found. Run Step 1 first." -ForegroundColor Red
+        Pause-Continue
+        return
+    }
+
     Write-Host ""
-    Write-Host "Name    : $($file.Name)" -ForegroundColor White
-    Write-Host "Path    : $($file.FullName)" -ForegroundColor White
-    Write-Host "Type    : media" -ForegroundColor White
-    Write-Host "Size    : $(Format-FileSize $file.Length)" -ForegroundColor White
-    Write-Host "Modified: $($file.LastWriteTime.ToString('yyyy-MM-dd HH:mm'))" -ForegroundColor White
-    Write-Host "Duration: $(Get-MediaDuration -FilePath $file.FullName)" -ForegroundColor White
-    Write-Host ""
+    Write-Host "Opening in ffplay: $($file.Name)" -ForegroundColor Green
+    & $ffplayPath -autoexit -hide_banner -loglevel warning $file.FullName
     Pause-Continue
 }
 
