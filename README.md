@@ -88,7 +88,7 @@
     ↓
 [4] 語音轉文字（輸出 .txt + .srt）
 
-    [5] 檔案管理（列出/刪除/重新命名）
+    [5] 檔案管理（分組瀏覽/刪除媒體與逐字稿）
     [6] 音量調整（分析音量、增減增益）
     [7] 後製降噪（輸出 _denoised 檔，可先處理後再播放或轉錄）
 ```
@@ -97,6 +97,7 @@
 
 ## 設定檔說明
 
+專案提供 [`settings.json.example`](settings.json.example) 作為版本控管中的設定範本；實際執行時會讀取本機的 `settings.json`。
 開啟 [`settings.json`](settings.json) 可調整：
 
 | 參數                       | 說明                           | 預設值               |
@@ -169,12 +170,13 @@
 .
 ├── menuCli.cmd                         # 主選單入口 (CLI)
 ├── menuGui.hta                         # 主選單入口 (GUI)
-├── settings.json                       # 集中設定檔 (JSON 格式)
+├── settings.json                       # 本機實際設定檔 (JSON 格式，git ignore)
+├── settings.json.example               # 版本控管中的設定範本
 ├── step1_download-dependencies.ps1     # 自動化工具下載
 ├── step2_record-audio.ps1              # 錄音處理（含電平測試）
 ├── step3_play-audio.ps1                # 音訊播放處理
 ├── step4_transcribe-audio.ps1          # Whisper 轉錄處理
-├── uty1_manage-files.ps1               # 音訊檔案管理（列出/刪除/重新命名）
+├── uty1_manage-files.ps1               # 分組檔案管理（瀏覽/播放/刪除媒體與逐字稿）
 ├── uty2_volume-adjust.ps1              # 音量分析與增益調整
 ├── uty3_denoise-audio.ps1              # 後製降噪處理
 ├── README.md                           # 專案說明

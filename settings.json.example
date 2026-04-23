@@ -13,7 +13,7 @@
     "format": "m4a",
     "mp3Quality": 2,
     "m4aQuality": 192,
-    "defaultDevice": "麥克風 (Logi C310 HD WebCam)"
+    "defaultDevice": ""
   },
   "record": {
     "purpose": "此區塊定義『步驟 3：後製降噪』的相關設定。",

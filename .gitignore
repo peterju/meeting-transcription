@@ -18,6 +18,10 @@ FFmpeg/
 *.srt
 *.vtt
 
+# 本機設定檔
+settings.json
+!settings.json.example
+
 # 系統檔案
 .DS_Store
 
