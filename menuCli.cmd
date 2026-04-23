@@ -12,13 +12,13 @@ echo ========================================
 echo       會議錄音轉逐字稿工具
 echo ========================================
 echo.
-echo   [1] 步驟 1：下載依賴工具 (執行一次即可)
-echo   [2] 步驟 2：錄音
-echo   [3] 步驟 3：播放錄音
-echo   [4] 步驟 4：語音轉文字
-echo   [5] 工具 1：檔案管理
-echo   [6] 工具 2：音量正規化
-echo   [7] 工具 3：後製降噪 (可選)
+echo   [1] 步驟一：下載依賴工具 (執行一次即可)
+echo   [2] 步驟二：錄音
+echo   [3] 步驟三：播放錄音
+echo   [4] 步驟四：語音轉文字
+echo   [5] 工具一：檔案管理
+echo   [6] 工具二：音量正規化
+echo   [7] 工具三：後製降噪 (可選)
 echo   [Enter] 退出
 echo.
 echo ========================================
@@ -83,13 +83,13 @@ goto :eof
 :run_step3
 echo.
 echo 正在執行步驟 3：播放錄音...
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step4_play-audio.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step3_play-audio.ps1"
 goto :eof
 
 :run_step4
 echo.
 echo 正在執行步驟 4：語音轉文字...
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step5_transcribe-audio.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0step4_transcribe-audio.ps1"
 goto :eof
 
 :run_step5

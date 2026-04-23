@@ -9,7 +9,7 @@
 main.exe -m <model> -l <lang> -f <audio> [options]
 ```
 
-### step5 實際呼叫方式
+### step4 實際呼叫方式
 
 ```powershell
 & $mainExePath -m $modelPath -l zh -otxt -osrt -nt -nc --prompt "..." -f "audio.mp4"
@@ -62,7 +62,7 @@ main.exe -m <model> -l <lang> -f <audio> [options]
 | `German`                 | `de`     |
 | `Spanish`                | `es`     |
 
-> step5 使用 `$langMap` 做對應轉換，詳見 `step5_transcribe-audio.ps1`。
+> step4 使用 `$langMap` 做對應轉換，詳見 `step4_transcribe-audio.ps1`。
 
 ## 注意事項
 

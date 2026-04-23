@@ -1,4 +1,4 @@
-# step4_play-audio.ps1
+# step3_play-audio.ps1
 # Select an audio file and play it using ffplay
 
 # Maintenance: This file uses English comments to avoid PowerShell 5.1 parser errors.

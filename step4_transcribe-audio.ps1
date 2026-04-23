@@ -1,4 +1,4 @@
-# step5_transcribe-audio.ps1
+# step4_transcribe-audio.ps1
 # Audio transcription using Whisper CLI (main.exe)
 
 # Maintenance: This file uses English comments to avoid PowerShell 5.1 parser errors.
