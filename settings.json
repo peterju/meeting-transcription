@@ -1,52 +1,52 @@
 {
-    "urls": {
-        "purpose": "此區塊定義『步驟 1：下載』的相關設定。",
-        "ffmpegReleaseBase": "https://github.com/GyanD/codexffmpeg/releases/download/",
-        "ffmpegFallback": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
-        "arnndnModel": "https://raw.githubusercontent.com/richardpl/arnndn-models/master/bd.rnnn",
-        "whisperDesktop": "https://github.com/Const-me/Whisper/releases/download/1.12.0/WhisperDesktop.zip",
-        "whisperCli": "https://github.com/Const-me/Whisper/releases/download/1.12.0/cli.zip",
-        "whisperModel": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin"
-    },
-    "audio": {
-        "purpose": "此區塊設定『步驟 2：錄音』。您可以更改格式 (mp3/m4a)或其品質",
-        "format": "m4a",
-        "mp3Quality": 2,
-        "m4aQuality": 192,
-        "defaultDevice": ""
-    },
-    "record": {
-        "purpose": "此區塊定義『步驟 3：後製降噪』的相關設定。",
-        "activeProfile": "meeting",
-        "gate": -40,
-        "lowpass": 5000,
-        "hipass": 80,
-        "profiles": {
-            "meeting": {
-                "name": "會議模式",
-                "purpose": "啟用 ARNNDN 降噪，適合一般會議錄音",
-                "arnndn": {
-                    "enabled": true,
-                    "model": "bd.rnnn"
-                },
-                "lowpass": 0
-            },
-            "choir": {
-                "name": "合唱團模式",
-                "purpose": "停用 ARNNDN，使用 Gate + Lowpass + Hipass",
-                "arnndn": {
-                    "enabled": false,
-                    "model": "bd.rnnn"
-                },
-                "gate": -50,
-                "lowpass": 10000,
-                "hipass": 70
-            }
-        }
-    },
-    "transcription": {
-        "purpose": "此區塊定義『步驟 4：轉錄』相關設定。",
-        "prompt": "這是一個會議錄音，請使用繁體中文進行逐字稿轉錄。",
-        "language": "Chinese"
+  "urls": {
+    "purpose": "此區塊定義『步驟 1：下載』的相關設定。",
+    "ffmpegReleaseBase": "https://github.com/GyanD/codexffmpeg/releases/download/",
+    "ffmpegFallback": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+    "arnndnModel": "https://raw.githubusercontent.com/richardpl/arnndn-models/master/bd.rnnn",
+    "whisperDesktop": "https://github.com/Const-me/Whisper/releases/download/1.12.0/WhisperDesktop.zip",
+    "whisperCli": "https://github.com/Const-me/Whisper/releases/download/1.12.0/cli.zip",
+    "whisperModel": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin"
+  },
+  "audio": {
+    "purpose": "此區塊設定『步驟 2：錄音』。您可以更改格式 (mp3/m4a)或其品質",
+    "format": "m4a",
+    "mp3Quality": 2,
+    "m4aQuality": 192,
+    "defaultDevice": "麥克風 (Logi C310 HD WebCam)"
+  },
+  "record": {
+    "purpose": "此區塊定義『步驟 3：後製降噪』的相關設定。",
+    "activeProfile": "meeting",
+    "gate": -40,
+    "lowpass": 5000,
+    "hipass": 80,
+    "profiles": {
+      "meeting": {
+        "name": "會議模式",
+        "purpose": "啟用 ARNNDN 降噪，適合一般會議錄音",
+        "arnndn": {
+          "enabled": true,
+          "model": "bd.rnnn"
+        },
+        "lowpass": 0
+      },
+      "choir": {
+        "name": "合唱團模式",
+        "purpose": "停用 ARNNDN，使用 Gate + Lowpass + Hipass",
+        "arnndn": {
+          "enabled": false,
+          "model": "bd.rnnn"
+        },
+        "gate": -50,
+        "lowpass": 10000,
+        "hipass": 70
+      }
     }
+  },
+  "transcription": {
+    "purpose": "此區塊定義『步驟 4：轉錄』相關設定。",
+    "prompt": "這是一個會議錄音，請使用繁體中文進行逐字稿轉錄。",
+    "language": "Chinese"
+  }
 }
